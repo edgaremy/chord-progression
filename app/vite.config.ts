@@ -6,7 +6,7 @@ import { resolve } from 'path';
 // Add svelte plugin for Svelte 5 support
 
 export default defineConfig({
-	base: './',
+	base: '/',
 	publicDir: 'static',
 	build: {
 		outDir: 'docs',
