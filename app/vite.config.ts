@@ -9,7 +9,7 @@ export default defineConfig({
 	base: '/',
 	publicDir: 'static',
 	build: {
-		outDir: 'docs',
+		outDir: '../docs',
 		emptyOutDir: true,
 	},
 	resolve: {
