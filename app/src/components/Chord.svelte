@@ -1,9 +1,16 @@
 <script lang="ts">
 	import type { Chord } from '$lib/chords/Chord';
+	import { getSoundEngine } from '$lib/sound-engine';
 
-	export let chord: Chord;
-	export let baseHue: number = 0;
-	export let size: string = '2rem';
+	interface Props {
+		chord: Chord;
+		baseHue?: number;
+		size?: string;
+	}
+
+	let { chord, baseHue = 0, size = '2rem' }: Props = $props();
+
+	let isPlaying = $state(false);
 
 	function getChordColor(chord: Chord, baseHue: number): { bg: string; text: string } {
 		const bgColor = chord.getColor(baseHue);
@@ -19,15 +26,38 @@
 		return { bg: bgColor, text: '#ffffff' };
 	}
 
-	$: colors = getChordColor(chord, baseHue);
+	async function playChord() {
+		if (isPlaying) return;
+
+		isPlaying = true;
+		try {
+			const soundEngine = getSoundEngine();
+			const notes = chord.getNotes();
+			await soundEngine.playChord(notes, 2, 0.7);
+			
+			// Wait for chord to finish playing
+			setTimeout(() => {
+				isPlaying = false;
+			}, 2000);
+		} catch (error) {
+			console.error('Error playing chord:', error);
+			isPlaying = false;
+		}
+	}
+
+	let colors = $derived(getChordColor(chord, baseHue));
 </script>
 
-<span 
-	class="chord" 
+<button
+	class="chord"
+	class:playing={isPlaying}
 	style="background-color: {colors.bg}; color: {colors.text}; font-size: {size};"
+	onclick={playChord}
+	title="Click to play chord"
+	type="button"
 >
 	{chord.toString()}
-</span>
+</button>
 
 <style>
 	.chord {
@@ -35,11 +65,34 @@
 		padding: 0.5rem 1rem;
 		border-radius: 1rem;
 		font-weight: bold;
-		transition: transform 0.1s;
+		transition: transform 0.1s, box-shadow 0.2s;
 		white-space: nowrap;
+		border: none;
+		cursor: pointer;
+		font-family: inherit;
 	}
 
-	.chord:hover {
-		transform: scale(1.05);
+	@media (hover: hover) and (pointer: fine) {
+		.chord:hover {
+			transform: translateY(-5px);
+		}
+	}
+
+	.chord:active {
+		transform: scaleX(1.02) scaleY(0.94);
+	}
+
+	.chord.playing {
+		box-shadow: 0 0 20px rgba(255, 255, 255, 0.5);
+		animation: pulse 0.5s ease-in-out;
+	}
+
+	@keyframes pulse {
+		0%, 100% {
+			transform: scale(1);
+		}
+		50% {
+			transform: scale(1.1);
+		}
 	}
 </style>

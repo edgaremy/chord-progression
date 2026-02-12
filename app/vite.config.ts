@@ -15,6 +15,7 @@ export default defineConfig({
 	resolve: {
 		alias: {
 			$lib: resolve('./src/lib'),
+			$assets: resolve('./src/assets'),
 		},
 	},
 	plugins: [
@@ -47,8 +48,10 @@ export default defineConfig({
 				]
 			},
 			workbox: {
-				globPatterns: ['**/*.{js,css,html,svg,png,ico,txt,woff2,otf,ttf}'],
+				globPatterns: ['**/*.{js,css,html,svg,png,ico,txt,woff2,otf,ttf,ogg}'],
 				globDirectory: 'docs',
+				// OGG samples ~3-5MB total
+				maximumFileSizeToCacheInBytes: 10 * 1024 * 1024, // 10MB
 				runtimeCaching: [
 					{
 						urlPattern: /^https:\/\/fonts\.googleapis\.com\/.*/i,
@@ -65,7 +68,7 @@ export default defineConfig({
 						}
 					},
 					{
-						urlPattern: /\.(png|jpg|jpeg)$/i,
+						urlPattern: /\.(svg|png|ico)$/i,
 						handler: 'CacheFirst',
 						options: {
 							cacheName: 'image-cache',
@@ -83,6 +86,20 @@ export default defineConfig({
 							expiration: {
 								maxEntries: 10,
 								maxAgeSeconds: 60 * 60 * 24 * 365 // 1 year
+							}
+						}
+					},
+					{
+						urlPattern: /\.ogg$/i,
+						handler: 'CacheFirst',
+						options: {
+							cacheName: 'audio-samples-cache',
+							expiration: {
+								maxEntries: 100,
+								maxAgeSeconds: 60 * 60 * 24 * 365 // 1 year
+							},
+							cacheableResponse: {
+								statuses: [0, 200]
 							}
 						}
 					}

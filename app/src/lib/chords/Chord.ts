@@ -200,4 +200,143 @@ export class Chord {
 		const hue = (baseHue + index * 30) % 360;
 		return `hsl(${hue}, 40%, 70%)`;
 	}
+
+	/**
+	 * Get the list of notes that compose the chord
+	 * @returns Array of note names [bass, root, 3rd, 5th, 7th, 9th, 11th, 13th, ...]
+	 */
+	getNotes(): string[] {
+		const notes: string[] = [];
+		const intervals = new Map<number, { semitones: number; preferSharps: boolean }>(); 
+		
+		// Determine if chord is major or minor (affects default intervals)
+		const isMajor = this.type !== 'm' && this.type !== 'dim';
+		const isDim = this.type === 'dim';
+		const isAug = this.type === 'aug';
+		const isSus2 = this.type === 'sus2';
+		const isSus4 = this.type === 'sus4';
+
+		// Start with bass note
+		notes.push(this.bass);
+		
+		// Add root (only if different from bass or if same, we add it twice)
+		notes.push(this.key);
+
+		// Set default third based on chord type
+		if (isSus2) {
+			intervals.set(2, { semitones: 2, preferSharps: false }); // Major 2nd instead of 3rd
+		} else if (isSus4) {
+			intervals.set(4, { semitones: 5, preferSharps: false }); // Perfect 4th instead of 3rd
+		} else if (isMajor && !isDim) {
+			intervals.set(3, { semitones: 4, preferSharps: false }); // Major 3rd
+		} else if (this.type === 'm' || isDim) {
+			intervals.set(3, { semitones: 3, preferSharps: false }); // Minor 3rd
+		}
+
+		// Set default fifth
+		if (isAug) {
+			intervals.set(5, { semitones: 8, preferSharps: true }); // Augmented 5th
+		} else if (isDim) {
+			intervals.set(5, { semitones: 6, preferSharps: false }); // Diminished 5th
+		} else {
+			intervals.set(5, { semitones: 7, preferSharps: false }); // Perfect 5th
+		}
+
+		// Process additions
+		for (const add of this.add) {
+			if (add === '2') {
+				intervals.set(2, { semitones: 2, preferSharps: false }); // Major 2nd
+			} else if (add === '4') {
+				intervals.set(4, { semitones: 5, preferSharps: false }); // Perfect 4th
+			} else if (add === '5') {
+				// 5th already set by default
+			} else if (add === '6') {
+				intervals.set(6, { semitones: isMajor ? 9 : 8, preferSharps: false }); // Major 6th for major, Minor 6th for minor
+			} else if (add === 'maj6') {
+				intervals.set(6, { semitones: 9, preferSharps: false }); // Major 6th
+			} else if (add === '7') {
+				// Dominant 7th (minor 7th)
+				intervals.set(7, { semitones: 10, preferSharps: false });
+			} else if (add === 'maj7') {
+				intervals.set(7, { semitones: 11, preferSharps: false }); // Major 7th
+			} else if (add === '9') {
+				intervals.set(7, { semitones: 10, preferSharps: false }); // Includes dominant 7th
+				intervals.set(9, { semitones: 14, preferSharps: false }); // Major 9th
+			} else if (add === 'maj9') {
+				intervals.set(7, { semitones: 11, preferSharps: false }); // Major 7th
+				intervals.set(9, { semitones: 14, preferSharps: false }); // Major 9th
+			} else if (add === '11') {
+				intervals.set(7, { semitones: 10, preferSharps: false }); // Includes dominant 7th
+				intervals.set(9, { semitones: 14, preferSharps: false }); // Includes 9th
+				intervals.set(11, { semitones: 17, preferSharps: false }); // Perfect 11th
+			} else if (add === '13') {
+				intervals.set(7, { semitones: 10, preferSharps: false }); // Includes dominant 7th
+				intervals.set(9, { semitones: 14, preferSharps: false }); // Includes 9th
+				intervals.set(11, { semitones: 17, preferSharps: false }); // Includes 11th
+				intervals.set(13, { semitones: 21, preferSharps: false }); // Major 13th
+			}
+		}
+
+		// Process modifications (override defaults)
+		for (const mod of this.mod) {
+			if (mod === 'b3') {
+				intervals.set(3, { semitones: 3, preferSharps: false }); // Minor 3rd
+			} else if (mod === '#4') {
+				intervals.set(4, { semitones: 6, preferSharps: true }); // Augmented 4th
+			} else if (mod === 'b5') {
+				intervals.set(5, { semitones: 6, preferSharps: false }); // Diminished 5th
+			} else if (mod === '#5') {
+				intervals.set(5, { semitones: 8, preferSharps: true }); // Augmented 5th
+			} else if (mod === 'b6') {
+				const baseSemitones = isMajor ? 9 : 8;
+				intervals.set(6, { semitones: baseSemitones - 1, preferSharps: false });
+			} else if (mod === 'maj6') {
+				intervals.set(6, { semitones: 9, preferSharps: false }); // Major 6th
+			} else if (mod === 'maj7') {
+				intervals.set(7, { semitones: 11, preferSharps: false }); // Major 7th
+			} else if (mod === 'b9') {
+				intervals.set(9, { semitones: 13, preferSharps: false }); // Minor 9th
+			} else if (mod === '#9') {
+				intervals.set(9, { semitones: 15, preferSharps: true }); // Augmented 9th
+			} else if (mod === '#11') {
+				intervals.set(9, { semitones: 14, preferSharps: false }); // Make sure 9th is included
+				intervals.set(11, { semitones: 18, preferSharps: true }); // Augmented 11th
+			} else if (mod === 'b13') {
+				intervals.set(9, { semitones: 14, preferSharps: false }); // Make sure 9th is included
+				intervals.set(11, { semitones: 17, preferSharps: false }); // Make sure 11th is included
+				intervals.set(13, { semitones: 20, preferSharps: false }); // Minor 13th
+			}
+		}
+
+		// Build the notes in order: root, 2, 3, 4, 5, 6, 7, 9, 11, 13
+		const orderedIntervals = [2, 3, 4, 5, 6, 7, 9, 11, 13];
+		
+		for (const interval of orderedIntervals) {
+			if (intervals.has(interval)) {
+				const { semitones, preferSharps } = intervals.get(interval)!;
+				const note = this.getNoteFromInterval(this.key, semitones, preferSharps);
+				notes.push(note);
+			}
+		}
+
+		return notes;
+	}
+
+	/**
+	 * Get a note that is a specific number of semitones above a root note
+	 * @param root Root note (e.g., 'C', 'F#', 'Bb')
+	 * @param semitones Number of semitones above root
+	 * @param preferSharps Force use of sharps instead of flats (for #5, #9, #11, etc.)
+	 * @returns The resulting note name
+	 */
+	private getNoteFromInterval(root: string, semitones: number, preferSharps: boolean = false): string {
+		// Use sharps if root has sharp, or if explicitly requested, flats otherwise
+		const useFlats = !root.includes('#') && !preferSharps;
+		const notes = useFlats ? Chord.notesDown : Chord.notesUp;
+		const rootIndex = notes.indexOf(root);
+		if (rootIndex === -1) return root;
+
+		const targetIndex = (rootIndex + semitones) % 12;
+		return notes[targetIndex];
+	}
 }

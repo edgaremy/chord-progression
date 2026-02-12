@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { theme, allProgressions } from '$lib/stores';
 	import ThemeSelector from '../components/ThemeSelector.svelte';
+	import SoundToggle from '../components/SoundToggle.svelte';
 
 	const APP_VERSION = '5.0';
 	const DB_VERSION = '10.';
@@ -17,6 +18,11 @@
 	<div class="setting-item">
 		<div class="setting-label">Theme</div>
 		<ThemeSelector />
+	</div>
+
+	<div class="setting-item">
+		<div class="setting-label">Auto-play Audio</div>
+		<SoundToggle />
 	</div>
 
 	<div class="setting-item">

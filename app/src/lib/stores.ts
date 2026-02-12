@@ -44,6 +44,17 @@ if (isBrowser) {
 	applyTheme(storedTheme as 'light' | 'dark' | 'system');
 }
 
+// Auto-play audio store
+const autoPlayKey = 'chord-app-autoplay';
+const storedAutoPlay = isBrowser ? localStorage.getItem(autoPlayKey) : null;
+export const autoPlayAudio = writable<boolean>(storedAutoPlay !== null ? storedAutoPlay === 'true' : true);
+
+autoPlayAudio.subscribe((value) => {
+	if (isBrowser) {
+		localStorage.setItem(autoPlayKey, value.toString());
+	}
+});
+
 // Filter options store
 export interface FilterOptions {
 	maxChords: number; // 0-8 where 0=2 chords, 1=3 chords, etc. 7=8 chords, 8=any

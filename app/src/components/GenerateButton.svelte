@@ -1,5 +1,5 @@
 <script lang="ts">
-	import trumpet from "$lib/../assets/trumpet.png";
+	import trumpet from "$assets/trumpet.svg";
 
 	export let size: number = 70;
 	export let onClick: () => void;
@@ -15,7 +15,7 @@
 		src={trumpet}
 		alt="Generate"
 		class="generate-icon"
-		style="width: {size * 0.7}px; height: {size * 0.7}px;"
+		style="width: {size * 0.65}px; height: {size * 0.65}px;"
 	/>
 </button>
 

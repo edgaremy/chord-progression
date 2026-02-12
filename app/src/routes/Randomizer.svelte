@@ -7,8 +7,10 @@
 		filters,
 		baseHue,
 		previousBaseHue,
-		generateRandomProgression
+		generateRandomProgression,
+		autoPlayAudio
 	} from '$lib/stores';
+	import { getSoundEngine } from '$lib/sound-engine';
 	import GenerateButton from '../components/GenerateButton.svelte';
 	import SecondaryButton from '../components/SecondaryButton.svelte';
 	import RollbackButton from '../components/RollbackButton.svelte';
@@ -19,6 +21,7 @@
 	let showRollback = $derived(prevProg !== null);
 	let currentBaseHue = $derived($baseHue);
 	let isMobile = $state(false);
+	let isAutoPlay = $derived($autoPlayAudio);
 
 	$effect(() => {
 		if (typeof window !== "undefined") {
@@ -35,7 +38,7 @@
 		}
 	});
 
-	function generateProgression() {
+	async function generateProgression() {
 		if (currentProg) {
 			previousProgression.set(currentProg.copy());
 			// Save current base hue
@@ -47,6 +50,20 @@
 			currentProgression.set(newProg);
 			// Generate new base hue for color variation
 			baseHue.set(Math.floor(Math.random() * 360));
+
+			// Play progression if auto-play is enabled
+			if (isAutoPlay) {
+				try {
+					const soundEngine = getSoundEngine();
+					const chordsNotes = newProg.chords.map(chord => chord.getNotes());
+					// Play in background, don't await to not block UI
+					soundEngine.playProgression(chordsNotes, 1.5, 0.3, 0.7).catch(error => {
+						console.error('Error playing progression:', error);
+					});
+				} catch (error) {
+					console.error('Error starting progression playback:', error);
+				}
+			}
 		}
 	}
 

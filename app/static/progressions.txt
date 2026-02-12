@@ -137,7 +137,7 @@ Amaj7 Dmaj7/9 Fmaj7
 Am Gm7 C7 Gm7
 Abmaj6/7 G7sus4 G7 Cm7 C7sus4 C7
 Em7 Abdim Cmaj7 Cmaj7(b3)
-Dm7/9 Bmaj7 Gm7 C7
+Dm7/9 Bbmaj7 Gm7 C7
 Am7 F7 B7 Dm7
 Bmaj7 Em7/9
 Am7 Bdim Dm7/9 Dm7(b5)

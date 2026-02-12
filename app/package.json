@@ -9,9 +9,11 @@
 		"preview": "vite preview",
 		"check": "svelte-check --tsconfig ./tsconfig.json",
 		"check:watch": "svelte-check --tsconfig ./tsconfig.json --watch",
-		"validate-chords": "npx tsx validate-chords.ts"
+		"validate-chords": "npx tsx validate-chords.ts",
+		"validate-chord-notes": "npx tsx validate-chord-notes.ts"
 	},
 	"devDependencies": {
+		"@sveltejs/adapter-static": "^3.0.10",
 		"@sveltejs/vite-plugin-svelte": "^4.0.0",
 		"svelte": "^5.0.0",
 		"svelte-check": "^4.0.0",
@@ -22,6 +24,7 @@
 	"type": "module",
 	"dependencies": {
 		"@mateothegreat/svelte5-router": "^2.16.19",
-		"lucide-svelte": "^0.563.0"
+		"lucide-svelte": "^0.563.0",
+		"tone": "^15.1.22"
 	}
 }

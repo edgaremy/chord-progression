@@ -2,6 +2,7 @@
 	import { Router } from "@mateothegreat/svelte5-router";
 	import { onMount } from 'svelte';
 	import { loadProgressions } from '$lib/stores';
+	import { getSoundEngine } from '$lib/sound-engine';
 	import Navigation from './components/Navigation.svelte';
 	import Home from "./routes/Home.svelte";
 	import Randomizer from "./routes/Randomizer.svelte";
@@ -34,9 +35,13 @@
 		}
 	});
 
-	// Load progressions on mount
+	// Load progressions and initialize sound engine on mount
 	onMount(async () => {
 		await loadProgressions();
+		
+		// Pre-create sound engine instance (but don't load samples yet)
+		// Samples will load on first user interaction to satisfy browser autoplay policies
+		getSoundEngine();
 	});
 
 	const routes = [

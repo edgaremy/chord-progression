@@ -1,5 +1,5 @@
 <script lang="ts">
-	import piano from "$lib/../assets/piano.png";
+	import piano from "$assets/piano.svg";
 	import {
 		allProgressions,
 		generateRandomProgression,
