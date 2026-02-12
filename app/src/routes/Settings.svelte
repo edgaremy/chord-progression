@@ -21,6 +21,16 @@
 	</div>
 
 	<div class="setting-item">
+		<div class="setting-label">Auto-play Audio</div>
+		<SoundToggle />
+	</div>
+
+	<div class="setting-item">
+		<div class="setting-label">Ukulele Hint</div>
+		<UkuleleSetting />
+	</div>
+
+	<div class="setting-item">
 		<div class="setting-label">Version</div>
 		<div class="setting-value">{APP_VERSION}</div>
 	</div>

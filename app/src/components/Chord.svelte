@@ -50,38 +50,29 @@
 	let colors = $derived(getChordColor(chord, baseHue));
 </script>
 
-<div class="container" style="background-color: {colors.bg};">
-	<button
-		class="chord"
-		class:playing={isPlaying}
-		style="background-color: {colors.bg}; color: {colors.text}; font-size: {size};"
-		onclick={playChord}
-		title="Click to play chord"
-		type="button"
-	>
-		{chord.toString()}
-	</button>
-	{#if $ukuleleSettings.enabled}
-		<UkuleleChord {chord} />
-	{/if}
-</div>
+<button
+  class="chord"
+  class:playing={isPlaying}
+  style="background-color: {colors.bg}; color: {colors.text}; font-size: {size};"
+  onclick={playChord}
+  title="Click to play chord"
+  type="button"
+>
+  <span class="chord-name">
+    {chord.toString()}
+  </span>
+  {#if $ukuleleSettings.enabled}
+    <UkuleleChord {chord} />
+  {/if}
+</button>
 
 <style>
-	.container {
+	.chord {
 		display: flex;
 		flex-direction: column;
 		align-items: center;
 		gap: 1rem;
 		border-radius: 1rem;
-		padding: 1rem;
-	}
-
-	.container:hover {
-		transform: scale(1.05);
-	}
-
-	.chord {
-		display: inline-block;
 		padding: 0.5rem 1rem;
 		font-weight: bold;
 		transition: transform 0.1s, box-shadow 0.2s;
