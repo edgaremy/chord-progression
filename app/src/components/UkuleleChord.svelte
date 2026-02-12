@@ -41,18 +41,17 @@
 
   .error {
     white-space: nowrap;
-    padding: 100%;
+    padding: 10%;
     position: absolute;
     text-align: center;
     font-size: 0.9rem;
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-    background: radial-gradient(
-      circle at center,
-      #0005 0%,
-      #0005 20%,
-      transparent 30%
-    );
+    background-color: var(--string-color);
+    color: var(--string-text);
+    border-radius: 10px;
+    box-shadow: 0px 9px 0px var(--fret-color);
+    border: 3px solid var(--fret-color);
   }
 </style>

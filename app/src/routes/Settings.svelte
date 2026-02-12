@@ -5,7 +5,6 @@
 	import SoundToggle from '../components/SoundToggle.svelte';
 
 	const APP_VERSION = '5.0';
-	const DB_VERSION = '10.';
 
 	let progCount = $derived($allProgressions.length);
 </script>
@@ -33,11 +32,6 @@
 	<div class="setting-item">
 		<div class="setting-label">Version</div>
 		<div class="setting-value">{APP_VERSION}</div>
-	</div>
-
-	<div class="setting-item">
-		<div class="setting-label">Chord Database Version</div>
-		<div class="setting-value">{DB_VERSION}</div>
 	</div>
 
 	<div class="setting-item">

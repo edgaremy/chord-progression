@@ -45,7 +45,7 @@
   .strings {
     height: 100%;
     display: flex;
-    height: 2rem;
+    height: 1.9rem;
   }
 
   .fret {

@@ -72,7 +72,7 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 0.75rem;
+    font-size: 0.9rem;
     font-weight: bold;
     color: var(--string-text);
   }
