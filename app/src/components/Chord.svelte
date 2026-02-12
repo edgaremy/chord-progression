@@ -1,61 +1,63 @@
 <script lang="ts">
-	import type { Chord } from "$lib/chords/Chord";
-	import { getSoundEngine } from "$lib/sound-engine";
-	import UkuleleChord from "./UkuleleChord.svelte";
-	import { ukuleleSettings } from "$lib/stores";
+import type { Chord } from "$lib/chords/Chord";
+import { getSoundEngine } from "$lib/sound-engine";
+import UkuleleChord from "./UkuleleChord.svelte";
+import { ukuleleSettings } from "$lib/stores";
 
-	interface Props {
-		chord: Chord;
-		baseHue?: number;
-		size?: string;
-	}
+interface Props {
+chord: Chord;
+baseHue?: number;
+size?: string;
+isPlaying?: boolean;
+}
 
-	let { chord, baseHue = 0, size = "2rem" }: Props = $props();
+let { chord, baseHue = 0, size = "2rem", isPlaying: externalIsPlaying = false }: Props = $props();
 
-	let isPlaying = $state(false);
+let isPlaying = $state(false);
+let displayPlaying = $derived(isPlaying || externalIsPlaying);
 
-	function getChordColor(
-		chord: Chord,
-		baseHue: number,
-	): { bg: string; text: string } {
-		const bgColor = chord.getColor(baseHue);
-		// Parse HSL to get hue value
-		const hslMatch = bgColor.match(/hsl\((\d+),\s*(\d+)%,\s*(\d+)%\)/);
-		if (hslMatch) {
-			const [, h] = hslMatch;
-			return {
-				bg: `hsl(${h}, var(--chord-bg-saturation), var(--chord-bg-luminance))`,
-				text: `hsl(${h}, var(--chord-text-saturation), var(--chord-text-luminance))`,
-			};
-		}
-		return { bg: bgColor, text: "#ffffff" };
-	}
+function getChordColor(
+chord: Chord,
+baseHue: number,
+): { bg: string; text: string } {
+const bgColor = chord.getColor(baseHue);
+// Parse HSL to get hue value
+const hslMatch = bgColor.match(/hsl\((\d+),\s*(\d+)%,\s*(\d+)%\)/);
+if (hslMatch) {
+const [, h] = hslMatch;
+return {
+bg: `hsl(${h}, var(--chord-bg-saturation), var(--chord-bg-luminance))`,
+text: `hsl(${h}, var(--chord-text-saturation), var(--chord-text-luminance))`,
+};
+}
+return { bg: bgColor, text: "#ffffff" };
+}
 
-	async function playChord() {
-		if (isPlaying) return;
+async function playChord() {
+if (isPlaying) return;
 
-		isPlaying = true;
-		try {
-			const soundEngine = getSoundEngine();
-			const notes = chord.getNotes();
-			await soundEngine.playChord(notes, 2, 0.7);
+isPlaying = true;
+try {
+const soundEngine = getSoundEngine();
+const notes = chord.getNotes();
+await soundEngine.playChord(notes, 2, 0.7);
 
-			// Wait for chord to finish playing
-			setTimeout(() => {
-				isPlaying = false;
-			}, 2000);
-		} catch (error) {
-			console.error("Error playing chord:", error);
-			isPlaying = false;
-		}
-	}
+// Wait for chord to finish playing
+setTimeout(() => {
+isPlaying = false;
+}, 2000);
+} catch (error) {
+console.error("Error playing chord:", error);
+isPlaying = false;
+}
+}
 
-	let colors = $derived(getChordColor(chord, baseHue));
+let colors = $derived(getChordColor(chord, baseHue));
 </script>
 
 <button
 	class="chord"
-	class:playing={isPlaying}
+	class:playing={displayPlaying}
 	style="background-color: {colors.bg}; color: {colors.text}; font-size: {size};"
 	onclick={playChord}
 	title="Click to play chord"
@@ -110,15 +112,15 @@
 		10% {
 			transform: translateY(-35px) scaleX(0.9) scaleY(1.1);
 		}
-		70% {
+		60% {
 			transform: translateY(-35px) scaleX(0.9) scaleY(1.1);
 		}
 
 		/* 80% {
 			transform: translateY(0) scaleX(0.9) scaleY(1);
 		} */
-		90% {
-			transform: translateY(1px) scaleX(1.1) scaleY(0.9);
+		80% {
+			transform: translateY(1px) scaleX(1) scaleY(0.9);
 		}
 	}
 </style>

@@ -53,5 +53,6 @@
     border-radius: 10px;
     box-shadow: 0px 9px 0px var(--fret-color);
     border: 3px solid var(--fret-color);
+    z-index: 3;
   }
 </style>

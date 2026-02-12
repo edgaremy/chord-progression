@@ -3,6 +3,15 @@
 
   let isAnimating = $state(false);
 
+  // Check if current tuning is GCEA (default)
+  let isDefaultTuning = $derived(
+    $ukuleleSettings.tuning.length === 4 &&
+    $ukuleleSettings.tuning[0] === 'G' &&
+    $ukuleleSettings.tuning[1] === 'C' &&
+    $ukuleleSettings.tuning[2] === 'E' &&
+    $ukuleleSettings.tuning[3] === 'A'
+  );
+
   function toggleUkuleleDiagrams() {
     $ukuleleSettings.enabled = !$ukuleleSettings.enabled;
   }
@@ -26,18 +35,23 @@
 
 <div class="container">
   {#if $ukuleleSettings.enabled}
-    <button
-      class="tuning {isAnimating ? 'rolling' : ''}"
-      onmousedown={handleMouseDown}
-      onmouseup={handleMouseUp}
-      onclick={rollTuning}
-    >
-      <div class="tune">
-        {#each $ukuleleSettings.tuning as note}
-        <div class="tuning-note">{note}</div>
-        {/each}
-      </div>
-    </button>
+    <div class="tuning-container">
+      {#if isDefaultTuning}
+        <span class="default-label">default tuning</span>
+      {/if}
+      <button
+        class="tuning {isAnimating ? 'rolling' : ''}"
+        onmousedown={handleMouseDown}
+        onmouseup={handleMouseUp}
+        onclick={rollTuning}
+      >
+        <div class="tune">
+          {#each $ukuleleSettings.tuning as note}
+          <div class="tuning-note">{note}</div>
+          {/each}
+        </div>
+      </button>
+    </div>
   {/if}
   <button class="ukulele-toggle {$ukuleleSettings.enabled ? 'enabled' : 'disabled'}" onclick={toggleUkuleleDiagrams}>
     {$ukuleleSettings.enabled ? 'Enabled' : 'Disabled'}
@@ -49,6 +63,19 @@
     display: flex;
     align-items: center;
     gap: 1rem;
+  }
+
+  .tuning-container {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .default-label {
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+    opacity: 0.7;
+    font-style: italic;
   }
 
   .tuning {

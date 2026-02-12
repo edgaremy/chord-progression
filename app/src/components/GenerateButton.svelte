@@ -1,6 +1,6 @@
 <script lang="ts">
 	import trumpet from "$assets/trumpet.svg";
-	import ukulele from "$lib/../assets/ukulele.png";
+	import ukulele from "$lib/../assets/ukulele.svg";
 
 	import { ukuleleSettings } from "$lib/stores";
 

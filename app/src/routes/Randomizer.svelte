@@ -22,6 +22,7 @@
 	let currentBaseHue = $derived($baseHue);
 	let isMobile = $state(false);
 	let isAutoPlay = $derived($autoPlayAudio);
+	let playingChordIndex = $state<number | null>(null);
 
 	$effect(() => {
 		if (typeof window !== "undefined") {
@@ -56,12 +57,23 @@
 				try {
 					const soundEngine = getSoundEngine();
 					const chordsNotes = newProg.chords.map(chord => chord.getNotes());
-					// Play in background, don't await to not block UI
-					soundEngine.playProgression(chordsNotes, 1.5, 0.3, 0.7).catch(error => {
+					// Play in background with callback to animate chords
+					playingChordIndex = null; // Reset before starting
+				soundEngine.playProgression(chordsNotes, 1.5, undefined, 0.7, (chordIndex) => {
+						playingChordIndex = chordIndex;
+						// Clear the animation after chord duration
+						setTimeout(() => {
+							if (playingChordIndex === chordIndex) {
+								playingChordIndex = null;
+							}
+						}, 500); // Match jump animation duration
+					}).catch(error => {
 						console.error('Error playing progression:', error);
+						playingChordIndex = null;
 					});
 				} catch (error) {
 					console.error('Error starting progression playback:', error);
+					playingChordIndex = null;
 				}
 			}
 		}
@@ -127,8 +139,8 @@
 		{:else}
 			{@const layout = getChordLayout(currentProg.chords.length, isMobile)}
 			<div class="chords-display">
-				{#each currentProg.chords as chord}
-					<Chord {chord} baseHue={currentBaseHue} size={layout.chordSize} />
+				{#each currentProg.chords as chord, index}
+					<Chord {chord} isPlaying={playingChordIndex === index} baseHue={currentBaseHue} size={layout.chordSize} />
 				{/each}
 			</div>
 		{/if}

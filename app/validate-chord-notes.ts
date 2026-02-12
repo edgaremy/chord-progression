@@ -63,8 +63,16 @@ const tests: ChordTest[] = [
 	{ chordName: 'C7\\Bb', expectedNotes: ['Bb', 'C', 'E', 'G', 'Bb'], description: 'C7 with Bb bass' },
 
 	// Complex chords
-	{ chordName: 'Cmaj9', expectedNotes: ['C', 'C', 'E', 'G', 'B', 'D'], description: 'C major 9 (already tested but important)' },
+	{ chordName: 'Cmaj9', expectedNotes: ['C', 'C', 'E', 'G', 'B', 'D'], description: 'C major 9' },
 	{ chordName: 'C7(b5/b9)', expectedNotes: ['C', 'C', 'E', 'Gb', 'Bb', 'Db'], description: 'C7 b5 b9' },
+	{ chordName: 'Fmaj7/9', expectedNotes: ['F', 'F', 'A', 'C', 'E', 'G'], description: 'F major 7/9' },
+	{ chordName: 'Cmaj7/9', expectedNotes: ['C', 'C', 'E', 'G', 'B', 'D'], description: 'C major 7/9' },
+	{ chordName: 'F6/9', expectedNotes: ['F', 'F', 'A', 'C', 'D', 'G'], description: 'F 6/9' },
+	{ chordName: 'Fmaj6/9', expectedNotes: ['F', 'F', 'A', 'C', 'D', 'G'], description: 'F major 6/9' },
+	{ chordName: 'C7sus4', expectedNotes: ['C', 'C', 'F', 'G', 'Bb'], description: 'C7 with suspended 4th' },
+	{ chordName: 'C7sus2', expectedNotes: ['C', 'C', 'D', 'G', 'Bb'], description: 'C7 with suspended 2nd' },
+	{ chordName: 'Cmaj7sus4', expectedNotes: ['C', 'C', 'F', 'G', 'B'], description: 'C major 7 with suspended 4th' },
+	{ chordName: 'Cmaj7sus2', expectedNotes: ['C', 'C', 'D', 'G', 'B'], description: 'C major 7 with suspended 2nd' },
 ];
 
 let passed = 0;

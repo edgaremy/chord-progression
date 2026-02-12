@@ -49,7 +49,7 @@ export default defineConfig({
 			},
 			workbox: {
 				globPatterns: ['**/*.{js,css,html,svg,png,ico,txt,woff2,otf,ttf,ogg}'],
-				globDirectory: 'docs',
+				globDirectory: '../docs',
 				// OGG samples ~3-5MB total
 				maximumFileSizeToCacheInBytes: 10 * 1024 * 1024, // 10MB
 				runtimeCaching: [

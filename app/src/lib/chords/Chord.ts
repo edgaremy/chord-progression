@@ -79,24 +79,47 @@ export class Chord {
 			buffer = buffer.replace(modMatch[0], '');
 		}
 
-		// Get type
+		// Get type and additions
+		// Check for posttype patterns (aug, dim, sus2, sus4) that may come after additions
 		if (buffer.length > 0) {
-			// Check for 'maj' first (to avoid detecting 'm' instead)
-			if (buffer.startsWith('maj')) {
-				// 'maj' is typically part of additions, not the type
-				type = '';
-			} else {
-				for (const t of Chord.types) {
-					if (t && buffer.startsWith(t)) {
-						type = t;
-						buffer = buffer.substring(t.length);
+			const posttypePatterns = ['aug', 'dim', 'sus4', 'sus2'];
+			let typeFound = false;
+			
+			// Check if buffer starts with a pretype pattern (m)
+			if (buffer.startsWith('m') && !buffer.startsWith('maj')) {
+				type = 'm';
+				buffer = buffer.substring(1);
+				typeFound = true;
+			}
+			
+			// Check for posttype patterns at the end
+			if (!typeFound) {
+				for (const posttype of posttypePatterns) {
+					const idx = buffer.indexOf(posttype);
+					if (idx !== -1) {
+						// Extract additions before the type
+						const beforeType = buffer.substring(0, idx);
+						if (beforeType.length > 0) {
+							add.push(...beforeType.split('/').filter((s) => s.length > 0));
+						}
+						// Extract type
+						type = posttype;
+						// Process remaining buffer after type
+						buffer = buffer.substring(idx + posttype.length);
+						typeFound = true;
 						break;
 					}
 				}
 			}
+			
+			// If no type found, everything remaining is additions
+			if (!typeFound && buffer.length > 0) {
+				add.push(...buffer.split('/').filter((s) => s.length > 0));
+				buffer = '';
+			}
 		}
 
-		// Get additions (what remains)
+		// Get any remaining additions after the type
 		if (buffer.length > 0) {
 			add.push(...buffer.split('/').filter((s) => s.length > 0));
 		}
@@ -242,6 +265,21 @@ export class Chord {
 			intervals.set(5, { semitones: 7, preferSharps: false }); // Perfect 5th
 		}
 
+		// Check if we have maj7 or maj6 in additions to determine 7th quality
+		const hasMaj7 = this.add.includes('maj7');
+		const hasMaj9 = this.add.includes('maj9');
+		const has7 = this.add.includes('7');
+		const has6 = this.add.includes('6');
+		const hasMaj6 = this.add.includes('maj6');
+		const has9 = this.add.includes('9');
+		
+		// Determine if suspended chord should have 3rd
+		const hasSus = isSus2 || isSus4;
+		if (hasSus && (has7 || hasMaj7)) {
+			// For sus7 chords, remove the 3rd if it was added
+			intervals.delete(3);
+		}
+
 		// Process additions
 		for (const add of this.add) {
 			if (add === '2') {
@@ -255,22 +293,32 @@ export class Chord {
 			} else if (add === 'maj6') {
 				intervals.set(6, { semitones: 9, preferSharps: false }); // Major 6th
 			} else if (add === '7') {
-				// Dominant 7th (minor 7th)
-				intervals.set(7, { semitones: 10, preferSharps: false });
+				// Dominant 7th (minor 7th) - only set if maj7 is not present
+				if (!intervals.has(7)) {
+					intervals.set(7, { semitones: 10, preferSharps: false });
+				}
 			} else if (add === 'maj7') {
 				intervals.set(7, { semitones: 11, preferSharps: false }); // Major 7th
 			} else if (add === '9') {
-				intervals.set(7, { semitones: 10, preferSharps: false }); // Includes dominant 7th
+				// Add 9th, and 7th only if not already set and no 6th present
+				// 6/9 chords should not include a 7th
+				if (!intervals.has(7) && !has6 && !hasMaj6) {
+					intervals.set(7, { semitones: 10, preferSharps: false }); // Default to dominant 7th
+				}
 				intervals.set(9, { semitones: 14, preferSharps: false }); // Major 9th
 			} else if (add === 'maj9') {
 				intervals.set(7, { semitones: 11, preferSharps: false }); // Major 7th
 				intervals.set(9, { semitones: 14, preferSharps: false }); // Major 9th
 			} else if (add === '11') {
-				intervals.set(7, { semitones: 10, preferSharps: false }); // Includes dominant 7th
+				if (!intervals.has(7)) {
+					intervals.set(7, { semitones: 10, preferSharps: false }); // Includes dominant 7th
+				}
 				intervals.set(9, { semitones: 14, preferSharps: false }); // Includes 9th
 				intervals.set(11, { semitones: 17, preferSharps: false }); // Perfect 11th
 			} else if (add === '13') {
-				intervals.set(7, { semitones: 10, preferSharps: false }); // Includes dominant 7th
+				if (!intervals.has(7)) {
+					intervals.set(7, { semitones: 10, preferSharps: false }); // Includes dominant 7th
+				}
 				intervals.set(9, { semitones: 14, preferSharps: false }); // Includes 9th
 				intervals.set(11, { semitones: 17, preferSharps: false }); // Includes 11th
 				intervals.set(13, { semitones: 21, preferSharps: false }); // Major 13th

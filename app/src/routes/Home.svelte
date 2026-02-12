@@ -59,19 +59,16 @@
 		display: flex;
 		flex-direction: column;
 		align-items: center;
-		justify-content: center;
-		/* min-height: calc(100vh - 140px); */
-		margin-top: 30vh;
-		padding-left: 5%;
-		padding-right: 5%;
+		justify-content: space-between;
+		min-height: calc(100vh - 140px);
+		padding: 4rem 5% 3rem 5%;
 		text-align: center;
-		gap: 3rem;
-
 	}
 
 	@media (min-width: 768px) {
 		.home-page {
-			margin-top: 15vh;
+			justify-content: center;
+			gap: 3rem;
 		}
 	}
 
@@ -81,6 +78,7 @@
 		align-items: flex-end;
 		justify-content: center;
 		min-height: 150px;
+		margin-top: 8rem;
 		letter-spacing: -0.15rem;
 		line-height: 1;
 		user-select: none;
@@ -88,6 +86,12 @@
 		-moz-user-select: none;
 		-ms-user-select: none;
 		pointer-events: none;
+	}
+
+	@media (min-width: 768px) {
+		.title-container {
+			margin-top: 0rem;
+		}
 	}
 
 	.piano-icon {
@@ -123,7 +127,6 @@
 		color: var(--text-primary);
 		margin: 0;
 		font-family: "Boleroesque", cursive;
-		/* text-align: left; */
 		text-justify:inter-ideograph;
 		width: 100%;
 		position: relative;
@@ -138,28 +141,12 @@
 		text-align: justify;
 		text-align-last: justify;
 		letter-spacing: -0.15em;
-		/* line-height: 1.1; */
 	}
 
 	.title-line {
 		display: block;
 		width: 100%;
 	}
-
-	/* Adjust letter-spacing so all lines have the same visual width */
-	/* CHORD = 5 chars, base spacing */
-	/* .title-line-1 {
-		letter-spacing: 0em;
-	}
-	.title-line-2 {
-		letter-spacing: 0.15em;
-	}
-	.title-line-3 {
-		letter-spacing: 0.3em;
-	}
-	.title-line-4 {
-		letter-spacing: 0.32em;
-	} */
 
 	.desktop-title {
 		display: none;

@@ -16,6 +16,8 @@ export interface SoundEngineConfig {
 	release: number;
 	/** Interval between cascading notes in seconds (0 = all notes together, default: 0) */
 	cascadeInterval: number;
+	/** Delay between chords in autoplay progressions in seconds (default: 0.3) */
+	delayBetweenChords: number;
 }
 
 /**
@@ -26,6 +28,9 @@ export class SoundEngine {
 	private config: SoundEngineConfig;
 	private isLoaded: boolean = false;
 	private loadPromise: Promise<void> | null = null;
+	private scheduledEvents: number[] = []; // Track scheduled Tone.js events
+	private activeNotes: string[] = []; // Track currently playing notes
+	private activeTimeouts: number[] = []; // Track active setTimeout callbacks
 
 	constructor(config: Partial<SoundEngineConfig> = {}) {
 		this.config = {
@@ -35,6 +40,7 @@ export class SoundEngine {
 			attack: config.attack ?? 0.01,
 			release: config.release ?? 0.8,
 			cascadeInterval: config.cascadeInterval ?? 0,
+			delayBetweenChords: config.delayBetweenChords ?? 0.3,
 		};
 	}
 
@@ -149,6 +155,9 @@ export class SoundEngine {
 	 * @param velocity Velocity (0-1, default: 0.7)
 	 */
 	async playChord(notes: string[], duration: number = 2, velocity: number = 0.7): Promise<void> {
+		// Stop any currently playing or scheduled sounds
+		this.stopAll();
+		
 		// Ensure samples are loaded before playing
 		if (!this.isLoaded) {
 			console.log('Loading samples before playback...');
@@ -200,13 +209,25 @@ export class SoundEngine {
 			// Cascade notes from low to high
 			let currentTime = now + 0.05;
 			for (const note of notesToPlay) {
-				this.sampler.triggerAttackRelease(note, duration, currentTime, velocity);
+				this.sampler.triggerAttack(note, currentTime, velocity);
 				currentTime += this.config.cascadeInterval;
 			}
 		} else {
 			// Play all notes together
-			this.sampler.triggerAttackRelease(notesToPlay, duration, now + 0.05, velocity);
+			this.sampler.triggerAttack(notesToPlay, now + 0.05, velocity);
 		}
+
+		// Track active notes
+		this.activeNotes = [...notesToPlay];
+
+		// Schedule release after duration
+		const releaseTimeout = setTimeout(() => {
+			if (this.sampler) {
+				this.sampler.triggerRelease(notesToPlay, Tone.now());
+			}
+			this.activeNotes = [];
+		}, duration * 1000);
+		this.activeTimeouts.push(releaseTimeout);
 	}
 
 	/**
@@ -255,27 +276,44 @@ export class SoundEngine {
 	}
 
 	/**
-	 * Stop all currently playing sounds
+	 * Stop all currently playing sounds and cancel scheduled events
 	 */
 	stopAll(): void {
-		if (this.sampler) {
-			this.sampler.releaseAll();
+		if (this.sampler && this.activeNotes.length > 0) {
+			// Immediately release all active notes
+			this.sampler.triggerRelease(this.activeNotes, Tone.now());
+			this.activeNotes = [];
 		}
+		// Cancel all scheduled Tone.js events
+		this.scheduledEvents.forEach(eventId => {
+			Tone.Transport.clear(eventId);
+		});
+		this.scheduledEvents = [];
+		// Clear all active timeouts
+		this.activeTimeouts.forEach(timeout => clearTimeout(timeout));
+		this.activeTimeouts = [];
 	}
 
 	/**
 	 * Play a progression (sequence of chords)
 	 * @param chordsNotes Array of chord notes arrays
 	 * @param chordDuration Duration of each chord in seconds (default: 1.5)
-	 * @param delayBetweenChords Delay between chords in seconds (default: 0.3)
+	 * @param delayBetweenChords Delay between chords in seconds (default: uses config.delayBetweenChords)
 	 * @param velocity Velocity (0-1, default: 0.7)
+	 * @param onChordStart Optional callback called when each chord starts playing (receives chord index)
 	 */
 	async playProgression(
 		chordsNotes: string[][],
 		chordDuration: number = 1.5,
-		delayBetweenChords: number = 0.3,
-		velocity: number = 0.7
+		delayBetweenChords?: number,
+		velocity: number = 0.7,
+		onChordStart?: (chordIndex: number) => void
 	): Promise<void> {
+		// Use config default if not provided
+		const delay = delayBetweenChords ?? this.config.delayBetweenChords;
+		// Stop any currently playing or scheduled sounds
+		this.stopAll();
+		
 		// Ensure samples are loaded before playing
 		if (!this.isLoaded) {
 			console.log('Loading samples before playback...');
@@ -301,7 +339,8 @@ export class SoundEngine {
 		const now = Tone.now();
 		let currentTime = now + 0.1; // Small initial delay to ensure everything is ready
 
-		for (const notes of chordsNotes) {
+		for (let chordIndex = 0; chordIndex < chordsNotes.length; chordIndex++) {
+			const notes = chordsNotes[chordIndex];
 			if (notes.length < 2) continue;
 
 			const notesToPlay: string[] = [];
@@ -326,27 +365,54 @@ export class SoundEngine {
 				lastNoteIndex = noteIndex;
 			}
 
-			// Schedule the chord to play at the current time with optional cascading
-			if (this.config.cascadeInterval > 0) {
-				// Cascade notes from low to high
-				let cascadeTime = currentTime;
-				for (const note of notesToPlay) {
-					this.sampler.triggerAttackRelease(note, chordDuration, cascadeTime, velocity);
-					cascadeTime += this.config.cascadeInterval;
-				}
-			} else {
-				// Play all notes together
-				this.sampler.triggerAttackRelease(notesToPlay, chordDuration, currentTime, velocity);
+			const timeUntilChord = (currentTime - now) * 1000; // Convert to milliseconds
+
+			// Schedule callback if provided
+			if (onChordStart) {
+				const callbackTimeout = setTimeout(() => onChordStart(chordIndex), timeUntilChord);
+				this.activeTimeouts.push(callbackTimeout);
 			}
+
+			// Schedule the chord attack
+			const attackTimeout = setTimeout(() => {
+				if (!this.sampler) return;
+
+				// Play immediately when timeout fires
+				if (this.config.cascadeInterval > 0) {
+					// Cascade notes from low to high
+					let cascadeTime = 0;
+					for (const note of notesToPlay) {
+						this.sampler.triggerAttack(note, Tone.now() + cascadeTime, velocity);
+						cascadeTime += this.config.cascadeInterval;
+					}
+				} else {
+					// Play all notes together
+					this.sampler.triggerAttack(notesToPlay, Tone.now(), velocity);
+				}
+
+				// Track active notes
+				this.activeNotes = [...notesToPlay];
+
+				// Schedule release after chord duration
+				const releaseTimeout = setTimeout(() => {
+					if (this.sampler) {
+						this.sampler.triggerRelease(notesToPlay, Tone.now());
+					}
+					this.activeNotes = [];
+				}, chordDuration * 1000);
+				this.activeTimeouts.push(releaseTimeout);
+			}, timeUntilChord);
+			this.activeTimeouts.push(attackTimeout);
 			
 			// Move to next chord time (chord duration + delay)
-			currentTime += chordDuration + delayBetweenChords;
+			currentTime += chordDuration + delay;
 		}
 
 		// Calculate total duration and return a promise that resolves when done
-		const totalDuration = chordsNotes.length * (chordDuration + delayBetweenChords);
+		const totalDuration = chordsNotes.length * (chordDuration + delay);
 		return new Promise(resolve => {
-			setTimeout(() => resolve(), totalDuration * 1000);
+			const completionTimeout = setTimeout(() => resolve(), totalDuration * 1000);
+			this.activeTimeouts.push(completionTimeout);
 		});
 	}
 
@@ -369,16 +435,20 @@ let soundEngineInstance: SoundEngine | null = null;
 /**
  * Get the global sound engine instance
  */
-export function getSoundEngine(): SoundEngine {
+export function getSoundEngine(config?: Partial<SoundEngineConfig>): SoundEngine {
 	if (!soundEngineInstance) {
 		soundEngineInstance = new SoundEngine({
 			bassOctave: 2,
 			chordOctave: 4,
-			volume: -6,
+			volume: -2,
 			attack: 0.001,
 			release: 0.8,
-			cascadeInterval: 0.06
+			cascadeInterval: 0.06,
+			delayBetweenChords: 0.1,
+			...config
 		});
+	} else if (config) {
+		soundEngineInstance.updateConfig(config);
 	}
 	return soundEngineInstance;
 }

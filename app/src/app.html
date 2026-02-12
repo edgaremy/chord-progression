@@ -4,12 +4,40 @@
 		<meta charset="utf-8" />
 		<meta name="viewport" content="width=device-width, initial-scale=1" />
 		<meta name="description" content="Generate random chord progressions for music composition" />
-		<meta name="theme-color" content="#49d59d" />
+		<meta name="theme-color" content="#03130c" id="theme-color-meta" />
 		<meta name="apple-mobile-web-app-capable" content="yes" />
-		<meta name="apple-mobile-web-app-status-bar-style" content="default" />
+		<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
 		<link rel="icon" href="%sveltekit.assets%/favicon.ico" />
 		<link rel="apple-touch-icon" href="%sveltekit.assets%/apple-touch-icon.png" />
 		<link rel="manifest" href="%sveltekit.assets%/manifest.json" />
+		<script>
+			// Update theme-color meta tag based on current theme
+			(function() {
+				const updateThemeColor = () => {
+					const theme = document.documentElement.getAttribute('data-theme');
+					const themeColorMeta = document.getElementById('theme-color-meta');
+					if (theme === 'dark') {
+						themeColorMeta.setAttribute('content', '#03130c'); // --bg-primary for dark
+					} else {
+						themeColorMeta.setAttribute('content', '#a6e3c7'); // --bg-primary for light
+					}
+				};
+				
+				// Update on initial load
+				if (document.readyState === 'loading') {
+					document.addEventListener('DOMContentLoaded', updateThemeColor);
+				} else {
+					updateThemeColor();
+				}
+				
+				// Watch for theme changes
+				const observer = new MutationObserver(updateThemeColor);
+				observer.observe(document.documentElement, {
+					attributes: true,
+					attributeFilter: ['data-theme']
+				});
+			})();
+		</script>
 		%sveltekit.head%
 	</head>
 	<body>

@@ -46,6 +46,11 @@
 	<div class="filter-item">
 		<div class="filter-label">Chord type: {chordTypeLabels[currentFilters.chordType]}</div>
 		<div class="slider-container">
+			<div class="slider-track">
+				{#each Array(5) as _, i}
+					<div class="slider-dot" class:filled={i <= currentFilters.chordType}></div>
+				{/each}
+			</div>
 			<input
 				type="range"
 				min="0"
@@ -61,6 +66,11 @@
 	<div class="filter-item">
 		<div class="filter-label">Max number of Chords: {maxChordsLabels[currentFilters.maxChords]}</div>
 		<div class="slider-container">
+			<div class="slider-track">
+				{#each Array(9) as _, i}
+					<div class="slider-dot" class:filled={i <= currentFilters.maxChords}></div>
+				{/each}
+			</div>
 			<input
 				type="range"
 				min="0"
@@ -113,6 +123,33 @@
 
 	.slider-container {
 		width: 100%;
+		position: relative;
+	}
+
+	.slider-track {
+		position: absolute;
+		top: 50%;
+		left: 0;
+		right: 0;
+		transform: translateY(-50%);
+		display: flex;
+		justify-content: space-between;
+		padding: 0 6px;
+		pointer-events: none;
+		z-index: 0;
+
+	}
+
+	.slider-dot {
+		width: 0.5rem;
+		height: 0.5rem;
+		border-radius: 50%;
+		background-color: var(--bg-primary);
+		transform: translateY(-1rem);
+	}
+
+	.slider-dot.filled {
+		background-color: var(--accent-primary);
 	}
 
 	.slider {
@@ -130,6 +167,8 @@
 			var(--bg-primary) 100%
 		);
 		cursor: pointer;
+		position: relative;
+		z-index: 1;
 	}
 
 	:root[data-theme='dark'] {
@@ -143,17 +182,17 @@
 	.slider::-webkit-slider-thumb {
 		-webkit-appearance: none;
 		appearance: none;
-		width: 24px;
-		height: 24px;
-		border-radius: 50%;
+		width: 12px;
+		height: 32px;
+		border-radius: 6px;
 		background: var(--accent-primary);
 		cursor: pointer;
 	}
 
 	.slider::-moz-range-thumb {
-		width: 24px;
-		height: 24px;
-		border-radius: 50%;
+		width: 12px;
+		height: 32px;
+		border-radius: 6px;
 		background: var(--accent-primary);
 		cursor: pointer;
 		border: none;
