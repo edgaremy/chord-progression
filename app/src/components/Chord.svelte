@@ -1,6 +1,8 @@
 <script lang="ts">
 	import type { Chord } from '$lib/chords/Chord';
 	import { getSoundEngine } from '$lib/sound-engine';
+  import UkuleleChord from './UkuleleChord.svelte';
+	import { ukuleleSettings } from '$lib/stores';
 
 	interface Props {
 		chord: Chord;
@@ -48,22 +50,39 @@
 	let colors = $derived(getChordColor(chord, baseHue));
 </script>
 
-<button
-	class="chord"
-	class:playing={isPlaying}
-	style="background-color: {colors.bg}; color: {colors.text}; font-size: {size};"
-	onclick={playChord}
-	title="Click to play chord"
-	type="button"
->
-	{chord.toString()}
-</button>
+<div class="container" style="background-color: {colors.bg};">
+	<button
+		class="chord"
+		class:playing={isPlaying}
+		style="background-color: {colors.bg}; color: {colors.text}; font-size: {size};"
+		onclick={playChord}
+		title="Click to play chord"
+		type="button"
+	>
+		{chord.toString()}
+	</button>
+	{#if $ukuleleSettings.enabled}
+		<UkuleleChord {chord} />
+	{/if}
+</div>
 
 <style>
+	.container {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		gap: 1rem;
+		border-radius: 1rem;
+		padding: 1rem;
+	}
+
+	.container:hover {
+		transform: scale(1.05);
+	}
+
 	.chord {
 		display: inline-block;
 		padding: 0.5rem 1rem;
-		border-radius: 1rem;
 		font-weight: bold;
 		transition: transform 0.1s, box-shadow 0.2s;
 		white-space: nowrap;

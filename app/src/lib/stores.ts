@@ -202,3 +202,31 @@ export function generateRandomProgression(
 export function resetFilters() {
 	filters.set({ ...defaultFilters });
 }
+
+// Ukulele settings store
+export interface UkuleleSettings {
+	enabled: boolean;
+	tuning: string[];
+}
+
+export const ukuleleTunings = [
+	['G', 'C', 'E', 'A'],
+	['A', 'D', 'F#', 'B'], // "Traditional” Hawaiian tuning
+	['D', 'G', 'B', 'E'],  // Baritone Standard tuning
+];
+
+const ukuleleSettingsKey = 'chord-app-ukulele-settings';
+const defaultUkuleleSettings: UkuleleSettings = {
+	enabled: false,
+	tuning: ukuleleTunings[0],
+};
+const storedUkuleleSettings = isBrowser ? localStorage.getItem(ukuleleSettingsKey) : null;
+const initialUkuleleSettings = storedUkuleleSettings ? JSON.parse(storedUkuleleSettings) : defaultUkuleleSettings;
+
+export const ukuleleSettings = writable<UkuleleSettings>(initialUkuleleSettings);
+
+ukuleleSettings.subscribe((value) => {
+	if (isBrowser) {
+		localStorage.setItem(ukuleleSettingsKey, JSON.stringify(value));
+	}
+});

@@ -34,6 +34,11 @@
 	--chord-bg-luminance: 35%;
 	--chord-text-saturation: 50%;
 	--chord-text-luminance: 70%;
+
+	/* Ukulele style */
+	--fret-color: #edb96f;
+	--string-color: #f5deb3;
+	--string-text: #003c14;
 }
 
 :root[data-theme='light'] {
@@ -64,6 +69,17 @@
 	--chord-text-luminance: 38%;
 	--chord-bg-saturation: 40%;
 	--chord-bg-luminance: 70%;
+
+	/* Ukulele style */
+	--fret-color: #edb96f;
+	--string-color: #f5deb3;
+	--string-text: #003c14;
+}
+
+:root {
+	--string-width: 0.25rem;
+	--fret-height: 0.25rem;
+	--finger-size: 1.5rem;
 }
 
 * {

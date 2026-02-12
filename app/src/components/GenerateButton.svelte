@@ -1,5 +1,8 @@
 <script lang="ts">
 	import trumpet from "$assets/trumpet.svg";
+	import ukulele from "$lib/../assets/ukulele.png";
+
+	import { ukuleleSettings } from "$lib/stores";
 
 	export let size: number = 70;
 	export let onClick: () => void;
@@ -12,7 +15,7 @@
 	style="--button-size: {size}px"
 >
 	<img
-		src={trumpet}
+		src={$ukuleleSettings.enabled ? ukulele : trumpet}
 		alt="Generate"
 		class="generate-icon"
 		style="width: {size * 0.65}px; height: {size * 0.65}px;"
