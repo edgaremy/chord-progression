@@ -1,12 +1,12 @@
 <script lang="ts">
-	import { theme, allProgressions } from '$lib/stores';
+	import { allProgressions } from '$lib/stores';
 	import ThemeSelector from '../components/ThemeSelector.svelte';
+  import UkuleleSetting from '../components/UkuleleSetting.svelte';
 	import SoundToggle from '../components/SoundToggle.svelte';
 
 	const APP_VERSION = '5.0';
 	const DB_VERSION = '10.';
 
-	let currentTheme = $derived($theme);
 	let progCount = $derived($allProgressions.length);
 </script>
 
@@ -23,6 +23,11 @@
 	<div class="setting-item">
 		<div class="setting-label">Auto-play Audio</div>
 		<SoundToggle />
+	</div>
+
+	<div class="setting-item">
+		<div class="setting-label">Ukulele Hint</div>
+		<UkuleleSetting />
 	</div>
 
 	<div class="setting-item">
