@@ -7,11 +7,10 @@ import { ukuleleSettings } from "$lib/stores";
 interface Props {
 chord: Chord;
 baseHue?: number;
-size?: string;
 isPlaying?: boolean;
 }
 
-let { chord, baseHue = 0, size = "2rem", isPlaying: externalIsPlaying = false }: Props = $props();
+let { chord, baseHue = 0, isPlaying: externalIsPlaying = false }: Props = $props();
 
 let isPlaying = $state(false);
 let displayPlaying = $derived(isPlaying || externalIsPlaying);
@@ -34,22 +33,21 @@ return { bg: bgColor, text: "#ffffff" };
 }
 
 async function playChord() {
-if (isPlaying) return;
+	const soundEngine = getSoundEngine();
+	
+	isPlaying = true;
+	try {
+		const chordNotes = chord.getNotes();
+		await soundEngine.playChord(chordNotes, 2, 0.7);
 
-isPlaying = true;
-try {
-const soundEngine = getSoundEngine();
-const notes = chord.getNotes();
-await soundEngine.playChord(notes, 2, 0.7);
-
-// Wait for chord to finish playing
-setTimeout(() => {
-isPlaying = false;
-}, 2000);
-} catch (error) {
-console.error("Error playing chord:", error);
-isPlaying = false;
-}
+		// Wait for chord to finish playing
+		setTimeout(() => {
+			isPlaying = false;
+		}, 2000);
+	} catch (error) {
+		console.error("Error playing chord:", error);
+		isPlaying = false;
+	}
 }
 
 let colors = $derived(getChordColor(chord, baseHue));
@@ -58,17 +56,20 @@ let colors = $derived(getChordColor(chord, baseHue));
 <button
 	class="chord"
 	class:playing={displayPlaying}
-	style="background-color: {colors.bg}; color: {colors.text}; font-size: {size};"
+	class:has-ukulele={$ukuleleSettings.enabled}
+	style="background-color: {colors.bg}; color: {colors.text};"
 	onclick={playChord}
 	title="Click to play chord"
 	type="button"
 >
-	<span class="chord-name">
-		{chord.toString()}
-	</span>
-	{#if $ukuleleSettings.enabled}
-		<UkuleleChord {chord} />
-	{/if}
+	<div class="chord-content">
+		<span class="chord-name">
+			{chord.toString()}
+		</span>
+		{#if $ukuleleSettings.enabled}
+			<UkuleleChord {chord} />
+		{/if}
+	</div>
 </button>
 
 <style>
@@ -76,17 +77,38 @@ let colors = $derived(getChordColor(chord, baseHue));
 		display: flex;
 		flex-direction: column;
 		align-items: center;
-		gap: 1rem;
-		border-radius: 1rem;
-		padding: 0.5rem 1rem;
+		justify-content: center;
+		border-radius: clamp(0.3rem, 1vmin, 1rem);
 		font-weight: bold;
-		transition:
-			transform 0.1s,
-			box-shadow 0.2s;
-		white-space: nowrap;
+		transition: transform 0.1s;
 		border: none;
 		cursor: pointer;
 		font-family: inherit;
+		position: relative;
+		overflow: visible;
+		padding: clamp(0.3rem, 2vmin, 1rem);
+		border-radius: clamp(0.6rem, 2vmin, 2rem);
+		flex-shrink: 1;
+		width: fit-content;
+		max-width: 100%;
+		height: fit-content;
+		max-height: 100%;
+		box-sizing: border-box;
+	}
+
+	.chord-content {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		justify-content: center;
+		gap: calc(var(--chord-base-font-size) * 0.3);
+		white-space: nowrap;
+		box-sizing: border-box;
+	}
+
+	.chord-name {
+		font-size: var(--chord-base-font-size);
+		line-height: 1;
 	}
 
 	@media (hover: hover) and (pointer: fine) {
@@ -100,8 +122,8 @@ let colors = $derived(getChordColor(chord, baseHue));
 	}
 
 	.chord.playing {
-		/* box-shadow: 0 0 20px rgba(255, 255, 255, 0.5); */
 		animation: jump 0.5s linear;
+		z-index: 10;
 	}
 
 	@keyframes jump {
@@ -110,17 +132,13 @@ let colors = $derived(getChordColor(chord, baseHue));
 			transform: translateY(0);
 		}
 		10% {
-			transform: translateY(-35px) scaleX(0.9) scaleY(1.1);
+			transform: translateY(-2rem) scaleX(0.9) scaleY(1.1);
 		}
 		60% {
-			transform: translateY(-35px) scaleX(0.9) scaleY(1.1);
+			transform: translateY(-2rem) scaleX(0.9) scaleY(1.1);
 		}
-
-		/* 80% {
-			transform: translateY(0) scaleX(0.9) scaleY(1);
-		} */
 		80% {
-			transform: translateY(1px) scaleX(1) scaleY(0.9);
+			transform: translateY(0.1rem) scaleX(1) scaleY(0.9);
 		}
 	}
 </style>

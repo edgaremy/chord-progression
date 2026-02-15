@@ -37,7 +37,7 @@
 		display: flex;
 		align-items: center;
 		background-color: var(--bg-tertiary);
-		border-radius: 9999px;
+		border-radius: 50%;
 		padding: 0.25rem;
 		gap: 0.25rem;
 	}
@@ -51,7 +51,7 @@
 		background: transparent;
 		color: var(--text-secondary);
 		cursor: pointer;
-		border-radius: 9999px;
+		border-radius: 50%;
 		transition: all 0.2s ease;
 		min-width: 40px;
 	}
@@ -64,6 +64,5 @@
 	.sound-option.selected {
 		background-color: var(--bg-primary);
 		color: var(--text-primary);
-		box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
 	}
 </style>

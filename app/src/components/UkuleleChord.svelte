@@ -37,22 +37,25 @@
     display: flex;
     flex-direction: column;
     align-items: center;
+    --string-width: calc(var(--ukulele-scale) * 0.08);
+    --fret-height: calc(var(--ukulele-scale) * 0.08);
+    --finger-size: calc(var(--ukulele-scale) * 0.5);
   }
 
   .error {
     white-space: nowrap;
-    padding: 10%;
+    padding: calc(var(--ukulele-scale) * 0.3);
     position: absolute;
     text-align: center;
-    font-size: 0.9rem;
+    font-size: calc(var(--ukulele-scale) * 0.25);
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
     background-color: var(--string-color);
     color: var(--string-text);
-    border-radius: 10px;
-    box-shadow: 0px 9px 0px var(--fret-color);
-    border: 3px solid var(--fret-color);
+    border-radius: calc(var(--ukulele-scale) * 0.15);
+    box-shadow: 0px calc(var(--ukulele-scale) * 0.25) 0px var(--fret-color);
+    border: calc(var(--ukulele-scale) * 0.08) solid var(--fret-color);
     z-index: 3;
   }
 </style>

@@ -46,16 +46,16 @@
 
   .note {
     position: absolute;
-    top: -1rem;
+    top: calc(var(--ukulele-scale) * -0.3);
     left: calc(var(--string-width) / 2);
     transform: translate(-50%, -50%);
-    font-size: 1rem;
+    font-size: calc(var(--ukulele-scale) * 0.35);
     color: var(--string-color);
     font-weight: bold;
   }
 
   .interval {
-    width: 1.75rem;
+    width: calc(var(--ukulele-scale) * 0.55);
   }
 
   .finger-placement {
@@ -72,7 +72,7 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 0.9rem;
+    font-size: calc(var(--ukulele-scale) * 0.3);
     font-weight: bold;
     color: var(--string-text);
   }

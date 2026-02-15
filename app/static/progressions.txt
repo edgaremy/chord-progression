@@ -353,7 +353,7 @@ Emaj7 Cmaj7
 Cmaj7 Am7 D7/9 F\G
 Cm Csus2\D Abmaj7
 A F G
-A D\F Gsus2
+A D\F# Gsus2
 Fm7 Eb Gm7
 Fm7 Eb G
 Gm7 A7 Dm7 Am7
@@ -486,3 +486,5 @@ C C7 Fmaj7 Abmaj7
 C C7\Bb Fmaj7 Abmaj6
 Gm F A Dm
 Gm Dm\F A Dm
+Dmaj6/9 E7/9
+Em7 Am7 A#dim B7(b13)

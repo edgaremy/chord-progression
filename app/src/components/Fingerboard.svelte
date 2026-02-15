@@ -55,7 +55,7 @@
   .strings {
     height: 100%;
     display: flex;
-    height: 1.9rem;
+    height: calc(var(--ukulele-scale) * 0.6);
     position: relative;
     z-index: 1;
   }
@@ -72,7 +72,7 @@
   .fret-0 {
     height: calc(var(--fret-height) * 2);
     position: absolute;
-    bottom: 1.9rem;
+    bottom: calc(var(--ukulele-scale) * 0.6);
     width: 100%;
     background-color: var(--fret-color);
     z-index: 2; /* Top fret is above strings */

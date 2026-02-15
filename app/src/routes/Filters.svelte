@@ -86,31 +86,41 @@
 
 <style>
 	.filters-container {
-		max-width: 800px;
-		margin: 0 auto;
-		padding: 0rem;
+		flex-direction: column;
+		align-items: center;
+		justify-content: center;
+		justify-content: flex-start;
+		padding-left: 1rem;
+		padding-right: 1rem;
+		margin-top: 0;
+		margin-left: auto;
+		margin-right: auto;
+		width: 100%;
+		max-width: 600px;
+		margin-bottom: 10rem;
 	}
 
 	.title-header {
 		display: flex;
 		align-items: center;
 		justify-content: space-between;
-		margin-top: 3rem;
-		margin-bottom: 5rem;
+		margin-top: 5rem;
+		margin-bottom: 4.5rem;
 		gap: 1rem;
 	}
 
 	.page-title {
 		font-size: 3rem;
 		font-weight: 700;
+		line-height: 1;
 		margin: 0;
 		color: var(--text-primary);
 		font-family: "Boleroesque", cursive;
 	}
 
 	.filter-item {
-		padding: 1.5rem;
-		margin-bottom: 1rem;
+		padding: 1rem;
+		margin-bottom: 0.9rem;
 		background-color: var(--bg-secondary);
 		border-radius: 15px;
 	}

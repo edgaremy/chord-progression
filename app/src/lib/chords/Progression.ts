@@ -70,6 +70,18 @@ export class Progression {
 		this.updateCategory();
 	}
 
+	transposeFlat(halfsteps: number): void {
+		this.key = Chord.transposeKeyFlat(this.key, halfsteps);
+		this.chords.forEach((chord) => chord.transposeFlat(halfsteps));
+		this.updateCategory();
+	}
+
+	transposeSharp(halfsteps: number): void {
+		this.key = Chord.transposeKeySharp(this.key, halfsteps);
+		this.chords.forEach((chord) => chord.transposeSharp(halfsteps));
+		this.updateCategory();
+	}
+
 	isSameCategory(prog: Progression): boolean {
 		return JSON.stringify(this.category) === JSON.stringify(prog.category);
 	}

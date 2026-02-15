@@ -191,9 +191,53 @@ export class Chord {
 		return notes[newIndex];
 	}
 
+	static transposeKeyFlat(key: string, halfsteps: number): string {
+		// Always use notesDown (flats) for flattening
+		const notes = Chord.notesDown;
+		let index = notes.indexOf(key);
+		
+		// If key not found in notesDown (e.g., it's a sharp), find it in notesUp
+		if (index === -1) {
+			index = Chord.notesUp.indexOf(key);
+		}
+		
+		if (index === -1) return key;
+
+		const newIndex = ((index + halfsteps) + 12) % 12;
+		return notes[newIndex];
+	}
+
+	static transposeKeySharp(key: string, halfsteps: number): string {
+		// Always use notesUp (sharps) for sharpening
+		const notes = Chord.notesUp;
+		let index = notes.indexOf(key);
+		
+		// If key not found in notesUp (e.g., it's a flat), find it in notesDown
+		if (index === -1) {
+			index = Chord.notesDown.indexOf(key);
+		}
+		
+		if (index === -1) return key;
+
+		const newIndex = ((index + halfsteps) + 12) % 12;
+		return notes[newIndex];
+	}
+
 	transpose(halfsteps: number): void {
 		this.key = Chord.transposeKey(this.key, halfsteps);
 		this.bass = Chord.transposeKey(this.bass, halfsteps);
+		this.updateName();
+	}
+
+	transposeFlat(halfsteps: number): void {
+		this.key = Chord.transposeKeyFlat(this.key, halfsteps);
+		this.bass = Chord.transposeKeyFlat(this.bass, halfsteps);
+		this.updateName();
+	}
+
+	transposeSharp(halfsteps: number): void {
+		this.key = Chord.transposeKeySharp(this.key, halfsteps);
+		this.bass = Chord.transposeKeySharp(this.bass, halfsteps);
 		this.updateName();
 	}
 

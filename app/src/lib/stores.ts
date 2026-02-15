@@ -90,10 +90,15 @@ export const isDefaultFilters = derived(filters, ($filters) => {
 export const allProgressions = writable<Progression[]>([]);
 export const currentProgression = writable<Progression | null>(null);
 export const previousProgression = writable<Progression | null>(null);
+export const memorizedProgression = writable<Progression | null>(null);
 
 // Base hue for color generation
 export const baseHue = writable<number>(Math.floor(Math.random() * 360));
 export const previousBaseHue = writable<number | null>(null);
+export const memorizedBaseHue = writable<number | null>(null);
+
+// Loop state for progression playback
+export const loopPlayback = writable<boolean>(false);
 
 // Initialize progressions from data file
 export async function loadProgressions() {

@@ -31,6 +31,7 @@ export class SoundEngine {
 	private scheduledEvents: number[] = []; // Track scheduled Tone.js events
 	private activeNotes: string[] = []; // Track currently playing notes
 	private activeTimeouts: number[] = []; // Track active setTimeout callbacks
+	private loopingPlayback: boolean = false; // Track if playback is looping
 
 	constructor(config: Partial<SoundEngineConfig> = {}) {
 		this.config = {
@@ -279,6 +280,7 @@ export class SoundEngine {
 	 * Stop all currently playing sounds and cancel scheduled events
 	 */
 	stopAll(): void {
+		// Don't reset loopingPlayback here - let the caller handle it
 		if (this.sampler && this.activeNotes.length > 0) {
 			// Immediately release all active notes
 			this.sampler.triggerRelease(this.activeNotes, Tone.now());
@@ -292,6 +294,14 @@ export class SoundEngine {
 		// Clear all active timeouts
 		this.activeTimeouts.forEach(timeout => clearTimeout(timeout));
 		this.activeTimeouts = [];
+	}
+
+	/**
+	 * Stop any looping playback
+	 */
+	stopLooping(): void {
+		this.loopingPlayback = false;
+		this.stopAll();
 	}
 
 	/**
@@ -414,6 +424,44 @@ export class SoundEngine {
 			const completionTimeout = setTimeout(() => resolve(), totalDuration * 1000);
 			this.activeTimeouts.push(completionTimeout);
 		});
+	}
+
+	/**
+	 * Play a progression with optional looping
+	 * @param chordsNotes Array of chord notes arrays
+	 * @param chordDuration Duration of each chord in seconds (default: 1.5)
+	 * @param delayBetweenChords Delay between chords in seconds (default: uses config.delayBetweenChords)
+	 * @param velocity Velocity (0-1, default: 0.7)
+	 * @param onChordStart Optional callback called when each chord starts playing (receives chord index)
+	 * @param loop Whether to loop the progression infinitely (default: false)
+	 */
+	async playProgressionWithLoop(
+		chordsNotes: string[][],
+		chordDuration: number = 1.5,
+		delayBetweenChords?: number,
+		velocity: number = 0.7,
+		onChordStart?: (chordIndex: number) => void,
+		loop: boolean = false
+	): Promise<void> {
+		this.loopingPlayback = loop;
+		
+		const playOnce = async () => {
+			await this.playProgression(chordsNotes, chordDuration, delayBetweenChords, velocity, onChordStart);
+			
+			// If still looping and not stopped, play again
+			if (this.loopingPlayback && loop) {
+				// Use the same delay between last chord and first chord as between other chords
+				const delay = delayBetweenChords ?? this.config.delayBetweenChords;
+				const loopTimeout = setTimeout(() => {
+					if (this.loopingPlayback) {
+						playOnce();
+					}
+				}, delay * 1000);
+				this.activeTimeouts.push(loopTimeout);
+			}
+		};
+		
+		await playOnce();
 	}
 
 	/**

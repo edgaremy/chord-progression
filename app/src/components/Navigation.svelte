@@ -106,12 +106,10 @@
 
 	.nav-item:hover {
 		color: var(--text-accent-primary);
-		/* background-color: rgba(73, 213, 157, 0.1); */
 	}
 
 	.nav-item.active {
 		color: var(--text-accent-primary);
-		/* background-color: rgba(73, 213, 157, 0.2); */
 	}
 
 	.nav-icon-container {

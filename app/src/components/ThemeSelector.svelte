@@ -45,9 +45,9 @@
 		display: flex;
 		align-items: center;
 		background-color: var(--bg-tertiary);
-		border-radius: 9999px;
+		border-radius: 50%;
 		padding: 0.25rem;
-		gap: 0.25rem;
+		/* gap: 0.25rem; */
 	}
 
 	.theme-option {

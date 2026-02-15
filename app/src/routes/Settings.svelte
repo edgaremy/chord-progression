@@ -43,13 +43,29 @@
 		<div class="setting-label">Made by</div>
 		<div class="setting-value">Edgar Remy</div>
 	</div>
+
+	<div class="setting-item">
+		<div class="setting-label">Repo</div>
+		<a href="https://github.com/edgarremy/chord-progression/" target="_blank" rel="noopener noreferrer" class="setting-link">
+			edgarremy/chord-progression
+		</a>
+	</div>
 </div>
 
 <style>
 	.settings-container {
-		max-width: 800px;
-		margin: 0 auto;
-		padding: 0rem;
+		flex-direction: column;
+		align-items: center;
+		justify-content: center;
+		justify-content: flex-start;
+		padding-left: 1rem;
+		padding-right: 1rem;
+		margin-top: 0;
+		margin-left: auto;
+		margin-right: auto;
+		width: 100%;
+		max-width: 600px;
+		margin-bottom: 10rem;
 	}
 
 	.page-title {
@@ -64,14 +80,14 @@
 		display: flex;
 		align-items: center;
 		justify-content: space-between;
-		margin-top: 3rem;
-		margin-bottom: 5rem;
+		margin-top: 5rem;
+		margin-bottom: 4.5rem;
 		gap: 1rem;
 	}
 
 	.setting-item {
-		padding: 1.5rem;
-		margin-bottom: 1rem;
+		padding: 1.1rem;
+		margin-bottom: 0.75rem;
 		background-color: var(--bg-secondary);
 		border-radius: 15px;
 		display: flex;
@@ -88,5 +104,17 @@
 	.setting-value {
 		font-size: 1rem;
 		color: var(--text-secondary);
+	}
+
+	.setting-link {
+		font-size: 1rem;
+		color: var(--text-accent-secondary);
+		text-decoration: none;
+		transition: color 0.2s;
+	}
+
+	.setting-link:hover {
+		color: var(--text-primary);
+		text-decoration: underline;
 	}
 </style>

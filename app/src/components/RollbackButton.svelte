@@ -17,8 +17,8 @@
 		display: flex;
 		align-items: center;
 		justify-content: center;
-		gap: 0.5rem;
-		padding: 0.15rem 0.7rem;
+		gap: 0.25rem;
+		padding: 0.2rem 0.7rem;
 		background-color: var(--bg-tertiary);
 		border: none;
 		border-radius: 8px;
