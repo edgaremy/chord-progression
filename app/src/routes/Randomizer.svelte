@@ -12,6 +12,7 @@
 		generateRandomProgression,
 		autoPlayAudio,
 		loopPlayback,
+		instrumentSettings,
 	} from "$lib/stores";
 	import { getSoundEngine } from "$lib/sound-engine";
 	import GenerateButton from "../components/GenerateButton.svelte";
@@ -30,6 +31,7 @@
 	let isAutoPlay = $derived($autoPlayAudio);
 	let isLooping = $state($loopPlayback);
 	let playingChordIndex = $state<number | null>(null);
+	let hasInstrument = $derived($instrumentSettings.type !== 'none');
 
 	async function generateProgression() {
 		// Check if we have a memorized prog to retrieve
@@ -218,7 +220,11 @@
 		{#if !currentProg}
 			<h2 class="placeholder-text">Tap to get some<br/>chords</h2>
 		{:else}
-			<div class="chords-display" style="--chord-count: {currentProg.chords.length}">
+			<div 
+				class="chords-display" 
+				class:with-instrument={hasInstrument}
+				style="--chord-count: {currentProg.chords.length}"
+			>
 				{#each currentProg.chords as chord, index}
 					<Chord
 						{chord}
@@ -307,10 +313,13 @@
 		padding: 0.5rem;
 		box-sizing: border-box;
 		container-type: size;
-		--chord-base-font-size: clamp(1.4rem, 10cqmin, 10rem);
+		--chord-base-font-size: clamp(1.6rem, 12cqmin, 12rem);
 		--ukulele-scale: clamp(1rem, 8cqmin, 8rem);
 	}
-
+	.chords-display.with-instrument {
+		--chord-base-font-size: clamp(0.6rem, 6cqmin, 4.5rem);
+		--ukulele-scale: clamp(0.6rem, 7cqmin, 3.5rem);
+	}
 	.controls-fixed {
 		height: fit-content;
 		flex-shrink: 0;

@@ -1,11 +1,24 @@
 <script lang="ts">
 	import trumpet from "$assets/trumpet.svg";
-	import ukulele from "$lib/../assets/ukulele.svg";
+	import ukulele from "$assets/ukulele.svg";
+	import piano from "$assets/piano.svg";
+	import guitar from "$assets/guitar.svg";
 
-	import { ukuleleSettings } from "$lib/stores";
+	import { instrumentSettings } from "$lib/stores";
 
-	export let size: number = 70;
-	export let onClick: () => void;
+	interface Props {
+		size?: number;
+		onClick: () => void;
+	}
+
+	let { size = 70, onClick }: Props = $props();
+	
+	let icon = $derived(
+		$instrumentSettings.type === 'piano' ? piano :
+		$instrumentSettings.type === 'guitar' ? guitar :
+		$instrumentSettings.type === 'ukulele' ? ukulele :
+		trumpet
+	);
 </script>
 
 <button
@@ -15,7 +28,7 @@
 	style="--button-size: {size}px"
 >
 	<img
-		src={$ukuleleSettings.enabled ? ukulele : trumpet}
+		src={icon}
 		alt="Generate"
 		class="generate-icon"
 		style="width: {size * 0.65}px; height: {size * 0.65}px;"

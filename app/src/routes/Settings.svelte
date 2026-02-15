@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { allProgressions } from '$lib/stores';
 	import ThemeSelector from '../components/ThemeSelector.svelte';
-  import UkuleleSetting from '../components/UkuleleSetting.svelte';
+  import InstrumentSetting from '../components/InstrumentSetting.svelte';
 	import SoundToggle from '../components/SoundToggle.svelte';
 
 	const APP_VERSION = '5.0';
@@ -25,8 +25,8 @@
 	</div>
 
 	<div class="setting-item">
-		<div class="setting-label">Ukulele Hint</div>
-		<UkuleleSetting />
+		<div class="setting-label">Instrument Hint</div>
+		<InstrumentSetting />
 	</div>
 
 	<div class="setting-item">

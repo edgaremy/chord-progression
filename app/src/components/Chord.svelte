@@ -2,7 +2,9 @@
 import type { Chord } from "$lib/chords/Chord";
 import { getSoundEngine } from "$lib/sound-engine";
 import UkuleleChord from "./UkuleleChord.svelte";
-import { ukuleleSettings } from "$lib/stores";
+import PianoChord from "./PianoChord.svelte";
+import GuitarChord from "./GuitarChord.svelte";
+import { instrumentSettings } from "$lib/stores";
 
 interface Props {
 chord: Chord;
@@ -14,6 +16,7 @@ let { chord, baseHue = 0, isPlaying: externalIsPlaying = false }: Props = $props
 
 let isPlaying = $state(false);
 let displayPlaying = $derived(isPlaying || externalIsPlaying);
+let hasInstrument = $derived($instrumentSettings.type !== 'none');
 
 function getChordColor(
 chord: Chord,
@@ -56,7 +59,7 @@ let colors = $derived(getChordColor(chord, baseHue));
 <button
 	class="chord"
 	class:playing={displayPlaying}
-	class:has-ukulele={$ukuleleSettings.enabled}
+	class:has-instrument={hasInstrument}
 	style="background-color: {colors.bg}; color: {colors.text};"
 	onclick={playChord}
 	title="Click to play chord"
@@ -66,7 +69,11 @@ let colors = $derived(getChordColor(chord, baseHue));
 		<span class="chord-name">
 			{chord.toString()}
 		</span>
-		{#if $ukuleleSettings.enabled}
+		{#if $instrumentSettings.type === 'piano'}
+			<PianoChord {chord} textColor={colors.text} />
+		{:else if $instrumentSettings.type === 'guitar'}
+			<GuitarChord {chord} />
+		{:else if $instrumentSettings.type === 'ukulele'}
 			<UkuleleChord {chord} />
 		{/if}
 	</div>

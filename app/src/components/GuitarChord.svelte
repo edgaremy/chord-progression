@@ -1,8 +1,7 @@
 <script lang="ts">
-  import { Chord } from "$lib/chords/Chord";
-  import { chordToFingerPlacements } from "$lib/chords/Ukulele";
-  import { ukuleleSettings } from "$lib/stores";
-  import Fingerboard from "./Fingerboard.svelte";
+  import type { Chord } from "$lib/chords/Chord";
+  import { Guitar, type GuitarFingerPlacement } from "$lib/chords/Guitar";
+  import GuitarFingerboard from "./GuitarFingerboard.svelte";
 
   interface Props {
     chord: Chord;
@@ -10,16 +9,29 @@
 
   let { chord }: Props = $props();
 
-  let fingerPlacements = $derived(chordToFingerPlacements(chord, $ukuleleSettings.tuning));
+  let fingerPlacements = $derived(Guitar.chordToFingerPlacements(chord));
+  
+  // Get the minimum non-zero fret to display fret number
+  let minFret = $derived(
+    fingerPlacements && fingerPlacements.length > 0
+      ? Math.min(...fingerPlacements.filter(fp => fp.fret > 0 && !fp.muted).map(fp => fp.fret))
+      : 1
+  );
+  
+  let displayFret = $derived(minFret > 0 ? minFret : 1);
 </script>
 
 <div class="neck">
+  {#if displayFret > 1}
+    <div class="fret-number">{displayFret}</div>
+  {/if}
   {#each Array(5) as _, fret}
-    <Fingerboard
+    <GuitarFingerboard
       fret={fret + 1}
       fingerPlacements={fingerPlacements
         ? fingerPlacements.filter((fp) => fp.fret === fret + 1)
         : []}
+      isFirstFret={fret === 0}
     />
   {/each}
   {#if fingerPlacements === null}
@@ -33,7 +45,6 @@
 
 <style>
   .neck {
-    padding-top: calc(var(--ukulele-scale) * 0.25);
     position: relative;
     display: flex;
     flex-direction: column;
@@ -41,6 +52,16 @@
     --string-width: calc(var(--ukulele-scale) * 0.08);
     --fret-height: calc(var(--ukulele-scale) * 0.08);
     --finger-size: calc(var(--ukulele-scale) * 0.5);
+  }
+
+  .fret-number {
+    position: absolute;
+    left: calc(var(--ukulele-scale) * -0.6);
+    top: calc(var(--ukulele-scale) * 0.6);
+    font-size: calc(var(--ukulele-scale) * 0.35);
+    color: var(--string-color);
+    font-weight: bold;
+    z-index: 5;
   }
 
   .error {

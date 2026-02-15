@@ -208,30 +208,46 @@ export function resetFilters() {
 	filters.set({ ...defaultFilters });
 }
 
-// Ukulele settings store
+// Instrument settings
+export type InstrumentType = 'none' | 'piano' | 'guitar' | 'ukulele';
+
+export interface InstrumentSettings {
+	type: InstrumentType;
+	ukuleleTuning: string[];
+}
+
+export const ukuleleTunings = [
+	['G', 'C', 'E', 'A'],
+	['A', 'D', 'F#', 'B'], // "Traditional" Hawaiian tuning
+	['D', 'G', 'B', 'E'],  // Baritone Standard tuning
+];
+
+const instrumentSettingsKey = 'chord-app-instrument-settings';
+const defaultInstrumentSettings: InstrumentSettings = {
+	type: 'none',
+	ukuleleTuning: ukuleleTunings[0],
+};
+const storedInstrumentSettings = isBrowser ? localStorage.getItem(instrumentSettingsKey) : null;
+const initialInstrumentSettings = storedInstrumentSettings ? JSON.parse(storedInstrumentSettings) : defaultInstrumentSettings;
+
+export const instrumentSettings = writable<InstrumentSettings>(initialInstrumentSettings);
+
+instrumentSettings.subscribe((value) => {
+	if (isBrowser) {
+		localStorage.setItem(instrumentSettingsKey, JSON.stringify(value));
+	}
+});
+
+// Legacy ukuleleSettings for backwards compatibility - derived from instrumentSettings
 export interface UkuleleSettings {
 	enabled: boolean;
 	tuning: string[];
 }
 
-export const ukuleleTunings = [
-	['G', 'C', 'E', 'A'],
-	['A', 'D', 'F#', 'B'], // "Traditional” Hawaiian tuning
-	['D', 'G', 'B', 'E'],  // Baritone Standard tuning
-];
-
-const ukuleleSettingsKey = 'chord-app-ukulele-settings';
-const defaultUkuleleSettings: UkuleleSettings = {
-	enabled: false,
-	tuning: ukuleleTunings[0],
-};
-const storedUkuleleSettings = isBrowser ? localStorage.getItem(ukuleleSettingsKey) : null;
-const initialUkuleleSettings = storedUkuleleSettings ? JSON.parse(storedUkuleleSettings) : defaultUkuleleSettings;
-
-export const ukuleleSettings = writable<UkuleleSettings>(initialUkuleleSettings);
-
-ukuleleSettings.subscribe((value) => {
-	if (isBrowser) {
-		localStorage.setItem(ukuleleSettingsKey, JSON.stringify(value));
-	}
-});
+export const ukuleleSettings = derived(
+	instrumentSettings,
+	($instrumentSettings) => ({
+		enabled: $instrumentSettings.type === 'ukulele',
+		tuning: $instrumentSettings.ukuleleTuning,
+	})
+);
