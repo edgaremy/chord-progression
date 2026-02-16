@@ -5,6 +5,7 @@ export interface FingerPlacement {
   fret: number; // 1-12 for frets
   finger: number; // 1-5 for fingers (1=index, 2=middle, 3=ring, 4=pinky, 5=thumb)
   barre: number; // 0 for no barre, or fret number for barre chords
+  muted?: boolean; // true if string should be muted
 }
 
 const MAX_FRET = 12;

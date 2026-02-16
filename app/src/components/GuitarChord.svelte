@@ -11,26 +11,30 @@
 
   let fingerPlacements = $derived(Guitar.chordToFingerPlacements(chord));
   
-  // Get the minimum non-zero fret to display fret number
+  // Get the minimum non-zero fret to determine where to start the display
   let minFret = $derived(
     fingerPlacements && fingerPlacements.length > 0
       ? Math.min(...fingerPlacements.filter(fp => fp.fret > 0 && !fp.muted).map(fp => fp.fret))
       : 1
   );
   
-  let displayFret = $derived(minFret > 0 ? minFret : 1);
+  // Determine the starting fret for display
+  // If all fingers are in the first 5 frets (or open), start from 1
+  // Otherwise, start from minFret to show the chord position
+  let startFret = $derived(minFret > 5 ? minFret : 1);
+  
+  // Only show fret number if not starting from fret 1
+  let showFretNumber = $derived(startFret > 1);
 </script>
 
 <div class="neck">
-  {#if displayFret > 1}
-    <div class="fret-number">{displayFret}</div>
+  {#if showFretNumber}
+    <div class="fret-number">{startFret}</div>
   {/if}
   {#each Array(5) as _, fret}
     <GuitarFingerboard
-      fret={fret + 1}
-      fingerPlacements={fingerPlacements
-        ? fingerPlacements.filter((fp) => fp.fret === fret + 1)
-        : []}
+      fret={startFret + fret}
+      allFingerPlacements={fingerPlacements || []}
       isFirstFret={fret === 0}
     />
   {/each}

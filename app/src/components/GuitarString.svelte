@@ -4,21 +4,26 @@
   interface Props {
     fret: number;
     string: number;
-    fingerPlacements: GuitarFingerPlacement[] | null;
+    allFingerPlacements: GuitarFingerPlacement[];
     isFirstFret: boolean;
     stringTuning: string;
   }
 
-  let { fret, string, fingerPlacements, isFirstFret, stringTuning }: Props = $props();
+  let { fret, string, allFingerPlacements, isFirstFret, stringTuning }: Props = $props();
   
-  // Check if this string is muted
+  // Check if this string is muted (check all placements)
   let isMuted = $derived(
-    fingerPlacements?.some(fp => fp.string === string && fp.muted) || false
+    allFingerPlacements.some(fp => fp.string === string && fp.muted)
   );
   
-  // Check if this string is played open
+  // Check if this string is played open (check all placements)
   let isOpen = $derived(
-    fingerPlacements?.some(fp => fp.string === string && fp.fret === 0 && !fp.muted) || false
+    allFingerPlacements.some(fp => fp.string === string && fp.fret === 0 && !fp.muted)
+  );
+  
+  // Get finger placements for this string and fret
+  let fingerPlacements = $derived(
+    allFingerPlacements.filter(fp => fp.string === string && fp.fret === fret)
   );
 </script>
 
@@ -33,15 +38,13 @@
         {/if}
       </div>
     {/if}
-    {#if fingerPlacements}
-      {#each fingerPlacements as fp}
-        {#if !fp.muted && fp.fret > 0}
-          <div class="finger-placement" style="--length: {fp.barre}">
-            {fp.finger}
-          </div>
-        {/if}
-      {/each}
-    {/if}
+    {#each fingerPlacements as fp}
+      {#if !fp.muted && fp.fret > 0}
+        <div class="finger-placement" style="--length: {fp.barre}">
+          {fp.finger}
+        </div>
+      {/if}
+    {/each}
   </div>
   {#if string !== 6}
     <div class="interval"></div>

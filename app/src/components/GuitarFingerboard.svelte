@@ -5,11 +5,16 @@
 
   interface Props {
     fret: number;
-    fingerPlacements: GuitarFingerPlacement[];
+    allFingerPlacements: GuitarFingerPlacement[];
     isFirstFret: boolean;
   }
 
-  let { fingerPlacements, fret, isFirstFret }: Props = $props();
+  let { allFingerPlacements, fret, isFirstFret }: Props = $props();
+  
+  // Filter placements for this fret
+  let fingerPlacements = $derived(
+    allFingerPlacements.filter((fp) => fp.fret === fret)
+  );
   
   const tuning = Guitar.standardTuning;
 </script>
@@ -25,9 +30,7 @@
           <GuitarString
             {fret}
             string={string + 1}
-            fingerPlacements={fingerPlacements.filter(
-              (fp) => fp.string === string + 1,
-            )}
+            allFingerPlacements={allFingerPlacements}
             {isFirstFret}
             stringTuning={tuning[string]}
           />

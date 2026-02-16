@@ -1,5 +1,6 @@
 // Guitar chord utilities
 import type { Chord } from './Chord';
+import { GuitarChords } from './GuitarChords';
 
 export interface GuitarFingerPlacement {
 	string: number; // 1-6 (1 is high E, 6 is low E)
@@ -56,10 +57,49 @@ export class Guitar {
 	}
 	
 	/**
-	 * Find guitar fingering for a chord (simplified version)
-	 * This is a basic implementation - full chord voicing is complex
+	 * Construct a chord type string for shape lookup
+	 */
+	static getChordTypeString(chord: Chord): string {
+		const type = chord.type;
+		const add = chord.add;
+		
+		// Handle simple cases
+		if (type === '' && add.length === 0) return 'major';
+		if (type === 'm' && add.length === 0) return 'minor';
+		
+		// Handle 7th chords
+		if (add.includes('7')) {
+			if (type === 'm') return 'min7';
+			return '7'; // dominant 7
+		}
+		
+		if (add.includes('maj7')) {
+			return 'maj7';
+		}
+		
+		// Handle other types
+		if (type === 'm') return 'minor';
+		if (type === '') return 'major';
+		
+		// Return generic type if no match
+		return type;
+	}
+	
+	/**
+	 * Find guitar fingering for a chord
+	 * First tries to use common chord shapes from GuitarChords
+	 * Falls back to note-based construction if no shape is found
 	 */
 	static chordToFingerPlacements(chord: Chord, tuning: string[] = this.standardTuning): GuitarFingerPlacement[] | null {
+		// Try to get a common chord shape first
+		const chordTypeString = this.getChordTypeString(chord);
+		const shapeFingerPlacements = GuitarChords.getChordShape(chord.key, chordTypeString);
+		
+		if (shapeFingerPlacements) {
+			return shapeFingerPlacements;
+		}
+		
+		// Fall back to note-based construction
 		const chordNotes = chord.getNotes();
 		if (chordNotes.length === 0) return null;
 		
@@ -70,9 +110,9 @@ export class Guitar {
 		// Try to find a simple voicing
 		const placements: GuitarFingerPlacement[] = [];
 		
-		// For each string (from low E to high E)
+		// For each string (from low E to high E, strings 6-1)
 		for (let stringIndex = 0; stringIndex < tuning.length; stringIndex++) {
-			const stringNum = stringIndex + 1;
+			const stringNum = 6 - stringIndex; // stringIndex 0 → string 6 (low E), stringIndex 5 → string 1 (high E)
 			let placed = false;
 			
 			// Try to match a chord note on this string
@@ -91,8 +131,8 @@ export class Guitar {
 				}
 			}
 			
-			// If we couldn't place a note, mark as muted for strings 5 and 6
-			if (!placed && stringIndex >= 4) {
+			// If we couldn't place a note, mark as muted for strings 5 and 6 (low A and low E)
+			if (!placed && stringIndex <= 1) {
 				placements.push({
 					string: stringNum,
 					fret: 0,

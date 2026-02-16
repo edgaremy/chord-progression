@@ -9,20 +9,31 @@
   }
 
   let { fret, string, fingerPlacements }: Props = $props();
+  
+  // Check if this string is muted
+  let isMuted = $derived(
+    fingerPlacements?.some(fp => fp.string === string && fp.muted) || false
+  );
 </script>
 
 <div class="container">
   <div class="string">
     {#if fret === 1}
       <div class="note">
-        {$ukuleleSettings.tuning[string - 1]}
+        {#if isMuted}
+          <span class="muted">X</span>
+        {:else}
+          {$ukuleleSettings.tuning[string - 1]}
+        {/if}
       </div>
     {/if}
     {#if fingerPlacements}
       {#each fingerPlacements as fp}
-        <div class="finger-placement" style="--length: {fp.barre}">
-          {fp.finger}
-        </div>
+        {#if !fp.muted}
+          <div class="finger-placement" style="--length: {fp.barre}">
+            {fp.finger}
+          </div>
+        {/if}
       {/each}
     {/if}
   </div>
@@ -52,6 +63,10 @@
     font-size: calc(var(--ukulele-scale) * 0.35);
     color: var(--string-color);
     font-weight: bold;
+  }
+
+  .muted {
+    color: var(--fret-color);
   }
 
   .interval {

@@ -283,12 +283,14 @@ export class Chord {
 		const isSus2 = this.type === 'sus2';
 		const isSus4 = this.type === 'sus4';
 
-		// Start with bass note
+		// Always start with bass note (comes first in slash chords like D/F#)
 		notes.push(this.bass);
 		
-		// Add root (only if different from bass or if same, we add it twice)
-		notes.push(this.key);
-
+		// Add root key only if different from bass (for slash chords)
+		if (this.bass !== this.key) {
+			notes.push(this.key);
+		}
+		
 		// Set default third based on chord type
 		if (isSus2) {
 			intervals.set(2, { semitones: 2, preferSharps: false }); // Major 2nd instead of 3rd
