@@ -4,7 +4,7 @@
   import InstrumentSetting from '../components/InstrumentSetting.svelte';
 	import SoundToggle from '../components/SoundToggle.svelte';
 
-	const APP_VERSION = '5.0';
+	const APP_VERSION = '5.1';
 
 	let progCount = $derived($allProgressions.length);
 </script>
