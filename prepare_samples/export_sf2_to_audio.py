@@ -45,7 +45,12 @@ def export_sf2_notes(
     if not 0 <= velocity <= 127:
         raise ValueError("Velocity must be between 0 and 127 (MIDI standard).")
 
-    for note in range(24, 109):  # C1 (24) to C8 (108)
+    restriced_range = [
+			24, 27, 30, 33, 36, 39, 42, 45, 48, 60, 63, 66, 69, 72, 75, 78, 81, 84,
+		]
+
+    # for note in range(24, 109):  # C1 (24) to C8 (108)
+    for note in restriced_range: # MIDI notes 36-48 (C2-C3) for bass, 60-84 (C4-C6) for chords (with 3 semitones increments)
         # Calculate gain scaling: progressively less gain for higher notes
         # Map note range to gain range: low notes get ~1.0, high notes get ~0.3
         note_ratio = (note - 24) / (108 - 24)  # 0.0 to 1.0
