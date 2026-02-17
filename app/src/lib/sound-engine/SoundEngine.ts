@@ -1,4 +1,6 @@
 import * as Tone from 'tone';
+import { get } from 'svelte/store';
+import { loopPlayback } from '../stores';
 
 /**
  * Configuration for the sound engine
@@ -16,7 +18,7 @@ export interface SoundEngineConfig {
 	release: number;
 	/** Interval between cascading notes in seconds (0 = all notes together, default: 0) */
 	cascadeInterval: number;
-	/** Delay between chords in autoplay progressions in seconds (default: 0.3) */
+	/** Interval between chord starts in progressions in seconds (default: 0.3) */
 	delayBetweenChords: number;
 }
 
@@ -37,11 +39,11 @@ export class SoundEngine {
 		this.config = {
 			bassOctave: config.bassOctave ?? 2,
 			chordOctave: config.chordOctave ?? 4,
-			volume: config.volume ?? -6,
-			attack: config.attack ?? 0.01,
+			volume: config.volume ?? -2,
+			attack: config.attack ?? 0.001,
 			release: config.release ?? 0.8,
-			cascadeInterval: config.cascadeInterval ?? 0,
-			delayBetweenChords: config.delayBetweenChords ?? 0.3,
+			cascadeInterval: config.cascadeInterval ?? 0.6,
+			delayBetweenChords: config.delayBetweenChords ?? 0.1,
 		};
 	}
 
@@ -65,6 +67,13 @@ export class SoundEngine {
 	private async _loadSamples(): Promise<void> {
 		// Ensure AudioContext is started (requires user gesture)
 		const context = Tone.getContext();
+		
+		// Resume context if suspended (important for Safari/iOS)
+		if (context.state === 'suspended') {
+			console.log('Resuming suspended AudioContext for Safari/iOS...');
+			await context.resume();
+		}
+		
 		if (context.state !== 'running') {
 			console.log('Starting AudioContext...');
 			try {
@@ -160,6 +169,12 @@ export class SoundEngine {
 	 * @param velocity Velocity (0-1, default: 0.7)
 	 */
 	async playChord(notes: string[], duration: number = 2, velocity: number = 0.7): Promise<void> {
+		// Resume context if suspended (important for Safari/iOS)
+		const context = Tone.getContext();
+		if (context.state === 'suspended') {
+			await context.resume();
+		}
+		
 		// Stop any currently playing or scheduled sounds
 		this.stopAll();
 		
@@ -311,8 +326,8 @@ export class SoundEngine {
 	/**
 	 * Play a progression (sequence of chords)
 	 * @param chordsNotes Array of chord notes arrays
-	 * @param chordDuration Duration of each chord in seconds (default: 1.5)
-	 * @param delayBetweenChords Delay between chords in seconds (default: uses config.delayBetweenChords)
+	 * @param chordDuration Duration before releasing each chord in seconds (default: 1.5)
+	 * @param delayBetweenChords Interval between chord starts in seconds (default: uses config.delayBetweenChords)
 	 * @param velocity Velocity (0-1, default: 0.7)
 	 * @param onChordStart Optional callback called when each chord starts playing (receives chord index)
 	 */
@@ -323,6 +338,12 @@ export class SoundEngine {
 		velocity: number = 0.7,
 		onChordStart?: (chordIndex: number) => void
 	): Promise<void> {
+		// Resume context if suspended (important for Safari/iOS)
+		const context = Tone.getContext();
+		if (context.state === 'suspended') {
+			await context.resume();
+		}
+		
 		// Use config default if not provided
 		const delay = delayBetweenChords ?? this.config.delayBetweenChords;
 		// Stop any currently playing or scheduled sounds
@@ -352,6 +373,7 @@ export class SoundEngine {
 		// Use Tone.js scheduling for accurate timing
 		const now = Tone.now();
 		let currentTime = now + 0.1; // Small initial delay to ensure everything is ready
+		let lastReleaseTimeout: ReturnType<typeof setTimeout> | null = null; // Track the last release timeout
 
 		for (let chordIndex = 0; chordIndex < chordsNotes.length; chordIndex++) {
 			const notes = chordsNotes[chordIndex];
@@ -380,6 +402,7 @@ export class SoundEngine {
 			}
 
 			const timeUntilChord = (currentTime - now) * 1000; // Convert to milliseconds
+			const isLastChord = chordIndex === chordsNotes.length - 1;
 
 			// Schedule callback if provided
 			if (onChordStart) {
@@ -390,6 +413,17 @@ export class SoundEngine {
 			// Schedule the chord attack
 			const attackTimeout = setTimeout(() => {
 				if (!this.sampler) return;
+
+				// Clear previous release timeout (if any) and release notes immediately
+				// This mimics exactly what manual chord playing does - the next chord interrupts the previous
+				if (lastReleaseTimeout) {
+					clearTimeout(lastReleaseTimeout);
+					lastReleaseTimeout = null;
+				}
+				if (this.activeNotes.length > 0) {
+					this.sampler.triggerRelease(this.activeNotes, Tone.now());
+					this.activeNotes = [];
+				}
 
 				// Play immediately when timeout fires
 				if (this.config.cascadeInterval > 0) {
@@ -407,23 +441,27 @@ export class SoundEngine {
 				// Track active notes
 				this.activeNotes = [...notesToPlay];
 
-				// Schedule release after chord duration
-				const releaseTimeout = setTimeout(() => {
-					if (this.sampler) {
-						this.sampler.triggerRelease(notesToPlay, Tone.now());
-					}
-					this.activeNotes = [];
-				}, chordDuration * 1000);
-				this.activeTimeouts.push(releaseTimeout);
+				// Only schedule release for the last chord
+				// For all other chords, the next chord will trigger the release
+				if (isLastChord) {
+					const releaseTimeout = setTimeout(() => {
+						if (this.sampler) {
+							this.sampler.triggerRelease(notesToPlay, Tone.now());
+						}
+						this.activeNotes = [];
+					}, chordDuration * 1000);
+					this.activeTimeouts.push(releaseTimeout);
+					lastReleaseTimeout = releaseTimeout;
+				}
 			}, timeUntilChord);
 			this.activeTimeouts.push(attackTimeout);
 			
-			// Move to next chord time (chord duration + delay)
-			currentTime += chordDuration + delay;
+			// Move to next chord time (using delayBetweenChords as full interval between starts)
+			currentTime += delay;
 		}
 
 		// Calculate total duration and return a promise that resolves when done
-		const totalDuration = chordsNotes.length * (chordDuration + delay);
+		const totalDuration = chordsNotes.length * delay;
 		return new Promise(resolve => {
 			const completionTimeout = setTimeout(() => resolve(), totalDuration * 1000);
 			this.activeTimeouts.push(completionTimeout);
@@ -433,8 +471,8 @@ export class SoundEngine {
 	/**
 	 * Play a progression with optional looping
 	 * @param chordsNotes Array of chord notes arrays
-	 * @param chordDuration Duration of each chord in seconds (default: 1.5)
-	 * @param delayBetweenChords Delay between chords in seconds (default: uses config.delayBetweenChords)
+	 * @param chordDuration Duration before releasing each chord in seconds (default: 1.5)
+	 * @param delayBetweenChords Interval between chord starts in seconds (default: uses config.delayBetweenChords)
 	 * @param velocity Velocity (0-1, default: 0.7)
 	 * @param onChordStart Optional callback called when each chord starts playing (receives chord index)
 	 * @param loop Whether to loop the progression infinitely (default: false)
@@ -452,15 +490,19 @@ export class SoundEngine {
 		const playOnce = async () => {
 			await this.playProgression(chordsNotes, chordDuration, delayBetweenChords, velocity, onChordStart);
 			
-			// If still looping and not stopped, play again
-			if (this.loopingPlayback && loop) {
-				// Use the same delay between last chord and first chord as between other chords
-				const delay = delayBetweenChords ?? this.config.delayBetweenChords;
+			// If still looping and not stopped, check if loop is still enabled in settings
+			const currentLoopSetting = get(loopPlayback);
+			if (this.loopingPlayback && loop && currentLoopSetting) {
+				// Account for the initial 0.1s delay in playProgression
+				// playProgression resolves after n*delay, but first chord starts at 0.1
+				// Last chord is at 0.1 + (n-1)*delay, next first chord should be at 0.1 + n*delay
+				// So we need to wait 0.1s after the promise resolves
+				const loopInterval = 100; // 0.1 seconds
 				const loopTimeout = setTimeout(() => {
 					if (this.loopingPlayback) {
 						playOnce();
 					}
-				}, delay * 1000);
+				}, loopInterval);
 				this.activeTimeouts.push(loopTimeout);
 			}
 		};

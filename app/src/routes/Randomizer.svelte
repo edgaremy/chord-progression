@@ -12,6 +12,7 @@
 		generateRandomProgression,
 		autoPlayAudio,
 		loopPlayback,
+		playbackSpeed,
 		instrumentSettings,
 	} from "$lib/stores";
 	import { getSoundEngine } from "$lib/sound-engine";
@@ -19,6 +20,7 @@
 	import SecondaryButton from "../components/SecondaryButton.svelte";
 	import SecondaryToggleButton from "../components/SecondaryToggleButton.svelte";
 	import RollbackButton from "../components/RollbackButton.svelte";
+	import PlayButton from "../components/PlayButton.svelte";
 	import Chord from "../components/Chord.svelte";
 	import { Play, Repeat2 } from "lucide-svelte";
 	import bemolIcon from "$assets/bemol.svg";
@@ -31,6 +33,7 @@
 	let isAutoPlay = $derived($autoPlayAudio);
 	let isLooping = $state($loopPlayback);
 	let playingChordIndex = $state<number | null>(null);
+	let isPlaying = $state(false);
 	let hasInstrument = $derived($instrumentSettings.type !== "none");
 	let hasPiano = $derived($instrumentSettings.type === "piano");
 
@@ -42,6 +45,7 @@
 			const soundEngine = getSoundEngine();
 			soundEngine.stopLooping();
 			playingChordIndex = null;
+			isPlaying = false;
 
 			// Store current as previous before switching to memorized
 			if (currentProg) {
@@ -99,12 +103,18 @@
 			const chordsNotes = currentProg.chords.map((chord) =>
 				chord.getNotes(),
 			);
-			playingChordIndex = null;
+			isPlaying = true;
 
-			await soundEngine.playProgressionWithLoop(
-				chordsNotes,
-				1.5,
-				undefined,
+			// Calculate timing based on playback speed
+		// delayBetweenChords now represents the full interval between chord starts
+		const baseInterval = 1.6; // seconds at 1.0x speed
+		const intervalBetweenStarts = baseInterval / $playbackSpeed; // Time from one chord start to next
+		const chordDuration = 1.5; // Keep chord duration constant
+
+		await soundEngine.playProgressionWithLoop(
+			chordsNotes,
+			chordDuration,
+			intervalBetweenStarts,
 				0.7,
 				(chordIndex) => {
 					playingChordIndex = chordIndex;
@@ -116,9 +126,28 @@
 				},
 				shouldLoop,
 			);
+			
+			// If not looping, mark as not playing after completion
+			if (!shouldLoop) {
+				isPlaying = false;
+			}
 		} catch (error) {
 			console.error("Error playing progression:", error);
 			playingChordIndex = null;
+			isPlaying = false;
+		}
+	}
+
+	function handlePlayStop() {
+		if (isPlaying) {
+			// Stop playback
+			const soundEngine = getSoundEngine();
+			soundEngine.stopLooping();
+			playingChordIndex = null;
+			isPlaying = false;
+		} else {
+			// Start playback
+			playFullProgression();
 		}
 	}
 
@@ -128,6 +157,7 @@
 			const soundEngine = getSoundEngine();
 			soundEngine.stopLooping();
 			playingChordIndex = null;
+			isPlaying = false;
 
 			const newProg = currentProg.copy();
 			newProg.transposeSharp(1);
@@ -147,6 +177,7 @@
 			const soundEngine = getSoundEngine();
 			soundEngine.stopLooping();
 			playingChordIndex = null;
+			isPlaying = false;
 
 			const newProg = currentProg.copy();
 			newProg.transposeFlat(-1);
@@ -166,6 +197,7 @@
 			const soundEngine = getSoundEngine();
 			soundEngine.stopLooping();
 			playingChordIndex = null;
+			isPlaying = false;
 
 			// Memorize current prog before rolling back
 			memorizedProgression.set(currentProg!.copy());
@@ -264,11 +296,11 @@
 				title="Toggle loop playback"
 			/>
 			<RollbackButton onClick={rollback} visible={showRollback} />
-			<SecondaryButton
-				onClick={playFullProgression}
-				icon={Play}
+			<PlayButton 
+				isPlaying={isPlaying} 
+				onClick={handlePlayStop}
 				size={42}
-				title="Play progression"
+				title="Play/Stop progression"
 			/>
 		</div>
 	</div>

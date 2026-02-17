@@ -86,7 +86,7 @@ let colors = $derived(getChordColor(chord, baseHue));
 		align-items: center;
 		justify-content: center;
 		font-weight: bold;
-		transition: transform 0.12s, box-shadow 0.02s;
+		transition: transform 0.12s, box-shadow none;
 		border: none;
 		cursor: pointer;
 		font-family: inherit;

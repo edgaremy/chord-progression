@@ -86,15 +86,16 @@
   .container {
     display: flex;
     flex-direction: column;
-    align-items: flex-end;
+    align-items: stretch;
     gap: 0.75rem;
+    width: 100%;
   }
 
   .instrument-buttons {
     display: flex;
     gap: 0.5rem;
     flex-wrap: wrap;
-    justify-content: flex-end;
+    justify-content: center;
   }
 
   .instrument-btn {

@@ -1,12 +1,24 @@
 <script lang="ts">
-	import { allProgressions } from '$lib/stores';
+	import { allProgressions, playbackSpeed } from '$lib/stores';
 	import ThemeSelector from '../components/ThemeSelector.svelte';
   import InstrumentSetting from '../components/InstrumentSetting.svelte';
 	import SoundToggle from '../components/SoundToggle.svelte';
+	import Slider from '../components/Slider.svelte';
 
 	const APP_VERSION = '5.1';
 
 	let progCount = $derived($allProgressions.length);
+
+	// Playback speed settings
+	let currentSpeed = $state($playbackSpeed);
+	const MIN_SPEED = 0.75;
+	const MAX_SPEED = 3.0;
+	const DEFAULT_SPEED = 1.5;
+
+	function handleSpeedChange(value: number) {
+		currentSpeed = value;
+		playbackSpeed.set(value);
+	}
 </script>
 
 <div class="settings-container">
@@ -19,14 +31,25 @@
 		<ThemeSelector />
 	</div>
 
+	<div class="setting-item vertical">
+		<div class="setting-label">Instrument Hint</div>
+		<InstrumentSetting />
+	</div>
+
 	<div class="setting-item">
 		<div class="setting-label">Auto-play Audio</div>
 		<SoundToggle />
 	</div>
 
-	<div class="setting-item">
-		<div class="setting-label">Instrument Hint</div>
-		<InstrumentSetting />
+	<div class="setting-item vertical">
+		<div class="setting-label">Playback Speed</div>
+		<Slider
+			bind:value={currentSpeed}
+			min={MIN_SPEED}
+			max={MAX_SPEED}
+			defaultValue={DEFAULT_SPEED}
+			onChange={handleSpeedChange}
+		/>
 	</div>
 
 	<div class="setting-item">
@@ -46,7 +69,7 @@
 
 	<div class="setting-item">
 		<div class="setting-label">Repo</div>
-		<a href="https://github.com/edgarremy/chord-progression/" target="_blank" rel="noopener noreferrer" class="setting-link">
+		<a href="https://github.com/edgaremy/chord-progression/" target="_blank" rel="noopener noreferrer" class="setting-link">
 			edgarremy/chord-progression
 		</a>
 	</div>
@@ -94,6 +117,12 @@
 		display: flex;
 		justify-content: space-between;
 		align-items: center;
+	}
+
+	.setting-item.vertical {
+		flex-direction: column;
+		align-items: flex-start;
+		gap: 1rem;
 	}
 
 	.setting-label {

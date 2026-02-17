@@ -1,5 +1,6 @@
 import { writable, derived } from 'svelte/store';
 import { Progression } from '$lib/chords/Progression';
+import { Chord } from '$lib/chords/Chord';
 import { ProgManager } from '$lib/chords/ProgManager';
 
 // Browser check - safe for SSR
@@ -57,13 +58,17 @@ autoPlayAudio.subscribe((value) => {
 
 // Filter options store
 export interface FilterOptions {
-	maxChords: number; // 0-8 where 0=2 chords, 1=3 chords, etc. 7=8 chords, 8=any
+	minChords: number; // 0-6 where 0=2 chords, 1=3 chords, etc. 6=8+ chords
+	maxChords: number; // 0-6 where 0=2 chords, 1=3 chords, etc. 6=8+ chords
 	chordType: number; // 0=minimal, 1=variations only, 2=seventh only, 3=seventh & variations, 4=any
+	trulyRandom: boolean; // Generate truly random chords instead of from database
 }
 
 const defaultFilters: FilterOptions = {
-	maxChords: 8, // any
-	chordType: 4 // any
+	minChords: 0, // 2 chords
+	maxChords: 6, // 8+ chords (any)
+	chordType: 4, // any
+	trulyRandom: false
 };
 
 const filtersKey = 'chord-app-filters';
@@ -81,8 +86,10 @@ filters.subscribe((value) => {
 // Check if filters are at default
 export const isDefaultFilters = derived(filters, ($filters) => {
 	return (
+		$filters.minChords === defaultFilters.minChords &&
 		$filters.maxChords === defaultFilters.maxChords &&
-		$filters.chordType === defaultFilters.chordType
+		$filters.chordType === defaultFilters.chordType &&
+		$filters.trulyRandom === defaultFilters.trulyRandom
 	);
 });
 
@@ -99,6 +106,17 @@ export const memorizedBaseHue = writable<number | null>(null);
 
 // Loop state for progression playback
 export const loopPlayback = writable<boolean>(false);
+
+// Playback speed (0.5 = half speed, 1.0 = normal, 2.0 = double speed)
+const playbackSpeedKey = 'chordProgressions:playbackSpeed';
+const storedPlaybackSpeed = isBrowser ? localStorage.getItem(playbackSpeedKey) : null;
+export const playbackSpeed = writable<number>(storedPlaybackSpeed ? parseFloat(storedPlaybackSpeed) : 1.0);
+
+if (isBrowser) {
+	playbackSpeed.subscribe((value) => {
+		localStorage.setItem(playbackSpeedKey, value.toString());
+	});
+}
 
 // Initialize progressions from data file
 export async function loadProgressions() {
@@ -146,16 +164,23 @@ export function generateRandomProgression(
 	progressions: Progression[],
 	filterOptions: FilterOptions
 ): Progression | null {
+	// If truly random is enabled, generate random chords
+	if (filterOptions.trulyRandom) {
+		return generateTrulyRandomProgression(filterOptions);
+	}
+
 	if (progressions.length === 0) return null;
 	
 	// Filter progressions based on options
 	let filtered = [...progressions];
 
-	// Filter by chord count
-	if (filterOptions.maxChords < 8) {
-		const maxCount = filterOptions.maxChords + 2; // 0=2 chords, 1=3 chords, etc. 7=9 chords
-		filtered = filtered.filter((p) => p.getNbChords() <= maxCount);
-	}
+	// Filter by chord count range
+	const minCount = filterOptions.minChords + 2; // 0=2 chords, 1=3 chords, etc.
+	const maxCount = filterOptions.maxChords === 6 ? 999 : filterOptions.maxChords + 2; // 6=8+ chords
+	filtered = filtered.filter((p) => {
+		const nbChords = p.getNbChords();
+		return nbChords >= minCount && nbChords <= maxCount;
+	});
 
 	// Get random progression from filtered list
 	const prog = ProgManager.getRandomProg(filtered);
@@ -201,6 +226,63 @@ export function generateRandomProgression(
 	}
 
 	return prog;
+}
+
+// Generate truly random progression
+function generateTrulyRandomProgression(filterOptions: FilterOptions): Progression {
+	// Random number of chords between min and max (but never more than 8 for 8+)
+	const minCount = filterOptions.minChords + 2;
+	const maxCount = filterOptions.maxChords === 6 ? 999 : filterOptions.maxChords + 2; // 6=8+ chords
+	const nbChords = Math.floor(Math.random() * (maxCount - minCount + 1)) + minCount;
+
+	// Random key
+	const keys = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
+	const key = keys[Math.floor(Math.random() * keys.length)];
+
+	// Generate random chords
+	const chords = [];
+	for (let i = 0; i < nbChords; i++) {
+		const chordKey = keys[Math.floor(Math.random() * keys.length)];
+		let type = '';
+		let add: string[] = [];
+
+		// Apply chord type filter
+		switch (filterOptions.chordType) {
+			case 0: // minimal - only basic major/minor
+				type = Math.random() < 0.5 ? '' : 'm';
+				break;
+			case 1: // variations only - dim/aug/sus
+				const variations = ['', 'm', 'dim', 'aug', 'sus2', 'sus4'];
+				type = variations[Math.floor(Math.random() * variations.length)];
+				break;
+			case 2: // seventh only - basic + 7
+				type = Math.random() < 0.5 ? '' : 'm';
+				if (Math.random() < 0.7) {
+					add = [type === 'm' ? '7' : (Math.random() < 0.5 ? '7' : 'maj7')];
+				}
+				break;
+			case 3: // seventh & variations
+				const allTypes = ['', 'm', 'dim', 'aug', 'sus2', 'sus4'];
+				type = allTypes[Math.floor(Math.random() * allTypes.length)];
+				if (Math.random() < 0.6) {
+					add = [type === 'm' ? '7' : (Math.random() < 0.5 ? '7' : 'maj7')];
+				}
+				break;
+			case 4: // any
+				const anyTypes = ['', 'm', 'dim', 'aug', 'sus2', 'sus4'];
+				type = anyTypes[Math.floor(Math.random() * anyTypes.length)];
+				if (Math.random() < 0.5) {
+					const additions = ['2', '4', '5', '6', 'maj7', '7', 'maj9', '9', '11', '13'];
+					add = [additions[Math.floor(Math.random() * additions.length)]];
+				}
+				break;
+		}
+
+		const chord = new Chord(chordKey, type, add, [], chordKey);
+		chords.push(chord);
+	}
+
+	return new Progression(chords, key);
 }
 
 // Reset function for filters
