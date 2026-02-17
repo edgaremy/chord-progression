@@ -60,7 +60,7 @@ let colors = $derived(getChordColor(chord, baseHue));
 	class="chord"
 	class:playing={displayPlaying}
 	class:has-instrument={hasInstrument}
-	style="background-color: {colors.bg}; color: {colors.text};"
+	style="background-color: {colors.bg}; color: {colors.text}; border: 2px solid {colors.text}; border-bottom-width: 5px;"
 	onclick={playChord}
 	title="Click to play chord"
 	type="button"
@@ -85,7 +85,6 @@ let colors = $derived(getChordColor(chord, baseHue));
 		flex-direction: column;
 		align-items: center;
 		justify-content: center;
-		border-radius: clamp(0.3rem, 1vmin, 1rem);
 		font-weight: bold;
 		transition: transform 0.1s;
 		border: none;
@@ -120,12 +119,13 @@ let colors = $derived(getChordColor(chord, baseHue));
 
 	@media (hover: hover) and (pointer: fine) {
 		.chord:hover {
-			transform: translateY(-4px);
+			transform: translateY(-3px);
 		}
 	}
 
 	.chord:active {
-		transform: scaleX(1.02) scaleY(0.94);
+		transform: translateY(5px) scaleX(1.02) scaleY(0.94);
+		border-bottom-width: 2px !important;
 	}
 
 	.chord.playing {

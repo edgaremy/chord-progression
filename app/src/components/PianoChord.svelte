@@ -115,7 +115,7 @@
     background-color: color-mix(in srgb, var(--played-color), white 15%);
     opacity: 0.55;
     pointer-events: none;
-    border-radius: inherit;
+    border-radius: 0 0 calc(var(--ukulele-scale) * 0.075) calc(var(--ukulele-scale) * 0.075);
   }
 
   .key.black .highlight {

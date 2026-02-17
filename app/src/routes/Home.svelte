@@ -38,11 +38,7 @@
 		<div class="title-container">
 			<img src={piano} alt="Piano" class="piano-icon" />
 			<h1 class="home-title">
-				<span class="mobile-title">
-					<span class="title-line title-line-1">C H O R D</span>
-					<span class="title-line title-line-2">P R O G</span>
-					<span class="title-line title-line-3">R E S S</span>
-					<span class="title-line title-line-4">I O N S</span>
+				<span class="mobile-title">CHORD<br/>PROGRESSIONS
 				</span>
 				<span class="desktop-title">CHORD PROGRESSIONS</span>
 			</h1>
@@ -98,10 +94,8 @@
 	.title-container {
 		position: relative;
 		display: flex;
-		align-items: center;
-		justify-content: center;
-		width: 80%;
-		height: 100%;
+		width: 100%;
+		height: 50%;
 		letter-spacing: -0.15rem;
 		line-height: 1;
 		user-select: none;
@@ -109,16 +103,21 @@
 		-moz-user-select: none;
 		-ms-user-select: none;
 		pointer-events: none;
-		padding: 2rem;
+		border-bottom: clamp(0.8rem, 3.5vw, 1.5rem) solid var(--text-primary);
+		padding: 0 1rem;
 	}
 
+	/* @media (min-width: 768px) {
+		.title-container {
+			align-items: center;
+		}
+	} */
+
 	.piano-icon {
-		width: clamp(8rem, 25vw, 16rem);
-		height: clamp(8rem, 25vw, 16rem);
-		position: absolute;
-		top: 50%;
-		left: 50%;
-		transform: translate(-50%, -100%);
+		width: clamp(12rem, 25vw, 15rem);
+		position: relative;
+		bottom: -95%;
+		left: 70%;
 		z-index: 10;
 		filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.3));
 		animation: float 3s ease-in-out infinite;
@@ -127,9 +126,9 @@
 
 	@media (min-width: 768px) {
 		.piano-icon {
-			width: clamp(13rem, 15vw, 16rem);
-			height: clamp(13rem, 15vw, 16rem);
-			top: 70%;
+			width: clamp(12rem, 18vw, 18rem);
+			bottom: -100%;
+			left: 50%;
 		}
 	}
 
@@ -145,36 +144,23 @@
 
 	.home-title {
 		font-family: "Boleroesque", cursive;
-		font-size: clamp(3rem, 8vw, 8rem);
 		font-weight: 700;
 		margin: 0;
+		position: absolute;
+		bottom: 0%;
 		color: var(--text-primary);
 		z-index: 1;
-		text-align: center;
-		width: 100%;
-		position: relative;
+		font-size: clamp(2rem, 11.5vw, 9rem);
 	}
 
 	.mobile-title {
 		display: flex;
 		flex-direction: column;
-		font-size: clamp(3rem, 14vw, 8rem);
-		text-align: justify;
-		text-align-last: justify;
-		letter-spacing: -0.15em;
-		/* Constrain width to maintain square-ish aspect ratio */
-		max-width: min(90vw, calc(var(--title-height) * 1.1));
-		aspect-ratio: 1 / 1;
-	}
-
-	.title-line {
-		display: block;
-		width: 100%;
 	}
 
 	.desktop-title {
 		display: none;
-		font-size: clamp(4rem, 9vw, 8rem);
+		text-align: center;
 	}
 
 	@media (min-width: 768px) {
