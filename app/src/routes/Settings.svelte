@@ -5,7 +5,7 @@
 	import SoundToggle from '../components/SoundToggle.svelte';
 	import Slider from '../components/Slider.svelte';
 
-	const APP_VERSION = '5.1';
+	const APP_VERSION = '5.2';
 
 	let progCount = $derived($allProgressions.length);
 
