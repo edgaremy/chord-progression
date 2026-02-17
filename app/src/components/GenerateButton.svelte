@@ -42,9 +42,6 @@
 	.generate-button {
 		width: var(--button-size);
 		height: var(--button-size);
-		/* background-color: var(--accent-primary);
-		border: none; */
-
 		background-color: var(--btn-bg);
 		border: 3px solid var(--btn-border);
 		box-shadow: 0px 6px var(--btn-border);

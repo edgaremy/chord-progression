@@ -60,7 +60,7 @@ let colors = $derived(getChordColor(chord, baseHue));
 	class="chord"
 	class:playing={displayPlaying}
 	class:has-instrument={hasInstrument}
-	style="background-color: {colors.bg}; color: {colors.text}; border: 2px solid {colors.text}; border-bottom-width: 5px;"
+	style="background-color: {colors.bg}; color: {colors.text}; border: 2px solid {colors.text}; box-shadow: 0 3px 0 {colors.text};"
 	onclick={playChord}
 	title="Click to play chord"
 	type="button"
@@ -86,7 +86,7 @@ let colors = $derived(getChordColor(chord, baseHue));
 		align-items: center;
 		justify-content: center;
 		font-weight: bold;
-		transition: transform 0.1s;
+		transition: transform 0.12s, box-shadow 0.02s;
 		border: none;
 		cursor: pointer;
 		font-family: inherit;
@@ -124,19 +124,18 @@ let colors = $derived(getChordColor(chord, baseHue));
 	}
 
 	.chord:active {
-		transform: translateY(5px) scaleX(1.02) scaleY(0.94);
-		border-bottom-width: 2px !important;
+		transform: translateY(5px) scaleX(1.01) scaleY(0.96);
+		box-shadow: 0 5px 0 transparent !important;
 	}
 
 	.chord.playing {
-		animation: jump 0.5s linear;
+		animation: jump 0.5s ease;
 		z-index: 10;
 	}
 
 	@keyframes jump {
-		0%,
-		100% {
-			transform: translateY(0);
+		0%{
+			transform: translateY(5px);
 		}
 		10% {
 			transform: translateY(-2rem) scaleX(0.9) scaleY(1.1);
@@ -146,6 +145,9 @@ let colors = $derived(getChordColor(chord, baseHue));
 		}
 		80% {
 			transform: translateY(0.1rem) scaleX(1) scaleY(0.9);
+		}
+		100% {
+			transform: translateY(0px);
 		}
 	}
 </style>

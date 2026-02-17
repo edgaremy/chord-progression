@@ -80,21 +80,27 @@
     width: var(--key-width);
     height: var(--white-key-height);
     background-color: white;
-    border: calc(var(--ukulele-scale) * 0.03) solid black;
+    border: calc(var(--ukulele-scale) * 0.03) solid
+      color-mix(in srgb, var(--played-color), black 40%);
     border-radius: 0 0 calc(var(--ukulele-scale) * 0.1)
       calc(var(--ukulele-scale) * 0.1);
-    border-bottom: calc(var(--ukulele-scale) * 0.05) solid black;
+    border-bottom: calc(var(--ukulele-scale) * 0.05) solid
+      color-mix(in srgb, var(--played-color), black 30%);
     margin-right: calc(var(--ukulele-scale) * -0.025);
   }
 
   :global([data-theme="dark"]) .key.white {
     background-color: rgba(255, 255, 255, 0.9);
+    border: calc(var(--ukulele-scale) * 0.03) solid
+      color-mix(in srgb, var(--played-color), black 90%);
+    border-bottom: calc(var(--ukulele-scale) * 0.05) solid
+      color-mix(in srgb, var(--played-color), black 80%);
   }
 
   .key.black {
     width: var(--black-key-width);
     height: var(--black-key-height);
-    background-color: black;
+    background-color: color-mix(in srgb, var(--played-color), black 65%);
     border-radius: 0 0 calc(var(--ukulele-scale) * 0.08)
       calc(var(--ukulele-scale) * 0.08);
     position: absolute;
@@ -106,6 +112,10 @@
     z-index: 2;
   }
 
+  :global([data-theme="dark"]) .key.black {
+    background-color: color-mix(in srgb, var(--played-color), black 85%);
+  }
+
   .highlight {
     position: absolute;
     top: 0;
@@ -115,7 +125,8 @@
     background-color: color-mix(in srgb, var(--played-color), white 15%);
     opacity: 0.55;
     pointer-events: none;
-    border-radius: 0 0 calc(var(--ukulele-scale) * 0.075) calc(var(--ukulele-scale) * 0.075);
+    border-radius: 0 0 calc(var(--ukulele-scale) * 0.07)
+      calc(var(--ukulele-scale) * 0.075);
   }
 
   .key.black .highlight {

@@ -43,27 +43,6 @@
 		color: var(--btn-border-hover);
 	}
 
-	@media (hover: hover) {
-		.secondary-toggle-button:hover {
-			animation: jump 0.2s linear;
-		}
-	}
-
-	@keyframes jump {
-		0% {
-			transform: translateY(0);
-		}
-		10% {
-			transform: translateY(-6px) scaleX(0.9) scaleY(1.1);
-		}
-		80% {
-			transform: translateY(4px) scaleX(1.1) scaleY(0.9);
-		}
-		100% {
-			transform: translateY(0);
-		}
-	}
-
 	.secondary-toggle-button:active {
 		transform: scaleX(1.05) scaleY(0.96);
 		transition:

@@ -64,7 +64,7 @@
 	}
 
 	@media (hover: hover) {
-		.secondary-button:hover {
+		.secondary-button:hover .icon-svg{
 			animation: jump 0.2s linear;
 		}
 	}
