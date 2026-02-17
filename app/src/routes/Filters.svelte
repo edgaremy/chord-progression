@@ -116,6 +116,7 @@
 		margin: 0;
 		color: var(--text-primary);
 		font-family: "Boleroesque", cursive;
+		letter-spacing: -0.02em;
 	}
 
 	.filter-item {

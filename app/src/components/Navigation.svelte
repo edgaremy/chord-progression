@@ -77,6 +77,10 @@
 		width: 100%;
 		border: none;
 		box-shadow: none;
+		-webkit-user-select: none;
+		-moz-user-select: none;
+		-ms-user-select: none;
+		user-select: none;
 	}
 
 	.nav-content {
@@ -102,6 +106,10 @@
 		min-width: 50px;
 		border-radius: 50px;
 		margin: 0 0.4rem;
+		-webkit-user-select: none;
+		-moz-user-select: none;
+		-ms-user-select: none;
+		user-select: none;
 	}
 
 	.nav-item:hover {
@@ -140,8 +148,6 @@
 		font-size: 0.75rem;
 		text-align: center;
 		white-space: nowrap;
-		/* overflow: hidden; */
-		/* text-overflow: ellipsis; */
 		width: 100%;
 		opacity: 0;
 		transition:

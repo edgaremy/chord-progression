@@ -45,7 +45,7 @@
 
   .error {
     white-space: nowrap;
-    padding: calc(var(--ukulele-scale) * 0.3);
+    padding: calc(var(--ukulele-scale) * 0.2);
     position: absolute;
     text-align: center;
     font-size: calc(var(--ukulele-scale) * 0.25);

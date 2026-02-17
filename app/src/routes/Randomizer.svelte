@@ -31,7 +31,8 @@
 	let isAutoPlay = $derived($autoPlayAudio);
 	let isLooping = $state($loopPlayback);
 	let playingChordIndex = $state<number | null>(null);
-	let hasInstrument = $derived($instrumentSettings.type !== 'none');
+	let hasInstrument = $derived($instrumentSettings.type !== "none");
+	let hasPiano = $derived($instrumentSettings.type === "piano");
 
 	async function generateProgression() {
 		// Check if we have a memorized prog to retrieve
@@ -218,11 +219,12 @@
 <div class="randomizer-page">
 	<div class="chords-area">
 		{#if !currentProg}
-			<h2 class="placeholder-text">Tap to get some<br/>chords</h2>
+			<h2 class="placeholder-text">Tap to get some<br />chords</h2>
 		{:else}
-			<div 
-				class="chords-display" 
+			<div
+				class="chords-display"
 				class:with-instrument={hasInstrument}
+				class:with-piano={hasPiano}
 				style="--chord-count: {currentProg.chords.length}"
 			>
 				{#each currentProg.chords as chord, index}
@@ -314,12 +316,18 @@
 		box-sizing: border-box;
 		container-type: size;
 		--chord-base-font-size: clamp(1.6rem, 12cqmin, 12rem);
-		--ukulele-scale: clamp(1rem, 8cqmin, 8rem);
+		/* --ukulele-scale: clamp(1rem, 8cqmin, 8rem); */
 	}
 	.chords-display.with-instrument {
-		--chord-base-font-size: clamp(0.6rem, 6cqmin, 4.5rem);
-		--ukulele-scale: clamp(0.6rem, 7cqmin, 3.5rem);
+		--chord-base-font-size: clamp(2rem, 7cqmin, 4.5rem);
+		--ukulele-scale: clamp(1rem, 7.2cqmin, 3.5rem);
 	}
+
+	.chords-display.with-piano {
+		--chord-base-font-size: clamp(2rem, 8cqmin, 6rem);
+		--ukulele-scale: clamp(3rem, 12cqmin, 5rem);
+	}
+
 	.controls-fixed {
 		height: fit-content;
 		flex-shrink: 0;

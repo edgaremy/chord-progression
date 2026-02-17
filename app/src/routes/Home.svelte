@@ -89,6 +89,10 @@
 		justify-content: center;
 		flex-shrink: 0;
 		padding-bottom: 2rem;
+		-webkit-user-select: none;
+		-moz-user-select: none;
+		-ms-user-select: none;
+		user-select: none;
 	}
 
 	.title-container {

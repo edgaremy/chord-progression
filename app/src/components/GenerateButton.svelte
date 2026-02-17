@@ -12,12 +12,15 @@
 	}
 
 	let { size = 70, onClick }: Props = $props();
-	
+
 	let icon = $derived(
-		$instrumentSettings.type === 'piano' ? piano :
-		$instrumentSettings.type === 'guitar' ? guitar :
-		$instrumentSettings.type === 'ukulele' ? ukulele :
-		trumpet
+		$instrumentSettings.type === "piano"
+			? piano
+			: $instrumentSettings.type === "guitar"
+				? guitar
+				: $instrumentSettings.type === "ukulele"
+					? ukulele
+					: trumpet,
 	);
 </script>
 
@@ -50,12 +53,15 @@
 		display: flex;
 		align-items: center;
 		justify-content: center;
-		transition:
-			transform 0.2s;
+		transition: transform 0.2s;
 		padding: 0;
 		position: relative;
 		overflow: hidden;
 		transform: translateY(-5px);
+		-webkit-user-select: none;
+		-moz-user-select: none;
+		-ms-user-select: none;
+		user-select: none;
 	}
 
 	@media (hover: hover) {
@@ -90,5 +96,9 @@
 	.generate-icon {
 		display: block;
 		object-fit: contain;
+		-webkit-user-select: none;
+		-moz-user-select: none;
+		-ms-user-select: none;
+		user-select: none;
 	}
 </style>

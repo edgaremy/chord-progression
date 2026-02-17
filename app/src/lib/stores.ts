@@ -224,7 +224,7 @@ export const ukuleleTunings = [
 
 const instrumentSettingsKey = 'chord-app-instrument-settings';
 const defaultInstrumentSettings: InstrumentSettings = {
-	type: 'none',
+	type: 'piano',
 	ukuleleTuning: ukuleleTunings[0],
 };
 const storedInstrumentSettings = isBrowser ? localStorage.getItem(instrumentSettingsKey) : null;

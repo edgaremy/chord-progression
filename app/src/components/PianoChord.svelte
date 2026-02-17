@@ -9,20 +9,20 @@
 
   let { chord, textColor }: Props = $props();
 
-  let pianoKeys: PianoKey[] = $derived(Piano.generatePianoKeys(chord.getNotes()));
+  let pianoKeys: PianoKey[] = $derived(
+    Piano.generatePianoKeys(chord.getNotes()),
+  );
 </script>
 
 <div class="piano">
   {#if pianoKeys.length === 0}
-    <div class="error">
-      Unable to render piano for this chord.
-    </div>
+    <div class="error">Unable to render piano for this chord.</div>
   {:else}
     <div class="keys">
       {#each pianoKeys as key}
         {#if !key.isBlack}
           <div class="key-container">
-            <div 
+            <div
               class="key white"
               class:played={key.isPlayed}
               style="--played-color: {textColor}"
@@ -32,7 +32,7 @@
               {/if}
             </div>
             {#if key.blackKeyAfter}
-              <div 
+              <div
                 class="key black"
                 class:played={key.blackKeyAfter.isPlayed}
                 style="--played-color: {textColor}"
@@ -55,10 +55,10 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    --key-width: calc(var(--ukulele-scale) * 0.35);
-    --white-key-height: calc(var(--ukulele-scale) * 1.2);
-    --black-key-height: calc(var(--ukulele-scale) * 0.75);
-    --black-key-width: calc(var(--ukulele-scale) * 0.25);
+    --key-width: calc(var(--ukulele-scale) * 0.32);
+    --white-key-height: calc(var(--ukulele-scale) * 1.02);
+    --black-key-height: calc(var(--ukulele-scale) * 0.6);
+    --black-key-width: calc(var(--ukulele-scale) * 0.24);
   }
 
   .keys {
@@ -80,18 +80,28 @@
     width: var(--key-width);
     height: var(--white-key-height);
     background-color: white;
-    border: calc(var(--ukulele-scale) * 0.025) solid black;
-    border-radius: 0 0 calc(var(--ukulele-scale) * 0.08) calc(var(--ukulele-scale) * 0.08);
+    border: calc(var(--ukulele-scale) * 0.03) solid black;
+    border-radius: 0 0 calc(var(--ukulele-scale) * 0.1)
+      calc(var(--ukulele-scale) * 0.1);
+    border-bottom: calc(var(--ukulele-scale) * 0.05) solid black;
     margin-right: calc(var(--ukulele-scale) * -0.025);
+  }
+
+  :global([data-theme="dark"]) .key.white {
+    background-color: rgba(255, 255, 255, 0.9);
   }
 
   .key.black {
     width: var(--black-key-width);
     height: var(--black-key-height);
     background-color: black;
-    border-radius: 0 0 calc(var(--ukulele-scale) * 0.05) calc(var(--ukulele-scale) * 0.05);
+    border-radius: 0 0 calc(var(--ukulele-scale) * 0.08)
+      calc(var(--ukulele-scale) * 0.08);
     position: absolute;
-    left: calc(var(--key-width) - var(--black-key-width) / 2 - var(--ukulele-scale) * 0.025);
+    left: calc(
+      var(--key-width) - var(--black-key-width) / 2 - var(--ukulele-scale) *
+        0.025
+    );
     top: 0;
     z-index: 2;
   }
@@ -102,15 +112,22 @@
     left: 0;
     right: 0;
     bottom: 0;
-    background-color: var(--played-color);
-    opacity: 0.9;
+    background-color: color-mix(in srgb, var(--played-color), white 15%);
+    opacity: 0.55;
     pointer-events: none;
     border-radius: inherit;
   }
 
   .key.black .highlight {
-    /* Black keys show color overlay with higher opacity */
-    opacity: 0.7;
+    opacity: 1;
+  }
+
+  :global([data-theme="dark"]) .highlight {
+    background-color: color-mix(in srgb, var(--played-color), black 15%);
+    opacity: 0.9;
+  }
+  :global([data-theme="dark"]) .key.black .highlight {
+    opacity: 0.75;
   }
 
   .error {
