@@ -70,7 +70,7 @@
 	<div class="setting-item">
 		<div class="setting-label">Repo</div>
 		<a href="https://github.com/edgaremy/chord-progression/" target="_blank" rel="noopener noreferrer" class="setting-link">
-			edgarremy/chord-progression
+			edgaremy/chord-progression
 		</a>
 	</div>
 </div>
