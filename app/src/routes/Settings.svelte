@@ -1,19 +1,30 @@
 <script lang="ts">
-	import { allProgressions, playbackSpeed } from '$lib/stores';
+	import { allProgressions, playbackSpeed, isDefaultSettings, resetSettings } from '$lib/stores';
 	import ThemeSelector from '../components/ThemeSelector.svelte';
   import InstrumentSetting from '../components/InstrumentSetting.svelte';
 	import SoundToggle from '../components/SoundToggle.svelte';
 	import Slider from '../components/Slider.svelte';
+	import ResetButton from '../components/ResetButton.svelte';
 
-	const APP_VERSION = '5.2';
+	const APP_VERSION = '5.3';
 
 	let progCount = $derived($allProgressions.length);
+	let isDefault = $state($isDefaultSettings);
+
+	$effect(() => {
+		isDefault = $isDefaultSettings;
+	});
 
 	// Playback speed settings
 	let currentSpeed = $state($playbackSpeed);
 	const MIN_SPEED = 0.75;
 	const MAX_SPEED = 3.0;
 	const DEFAULT_SPEED = 1.5;
+
+	// Update local state when store changes (e.g., after reset)
+	$effect(() => {
+		currentSpeed = $playbackSpeed;
+	});
 
 	function handleSpeedChange(value: number) {
 		currentSpeed = value;
@@ -24,6 +35,9 @@
 <div class="settings-container">
 	<div class="title-header">
 		<h1 class="page-title">Settings</h1>
+		{#if !isDefault}
+			<ResetButton onClick={resetSettings} />
+		{/if}
 	</div>
 
 	<div class="setting-item">

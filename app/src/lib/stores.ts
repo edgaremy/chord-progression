@@ -8,8 +8,10 @@ const isBrowser = typeof window !== 'undefined';
 
 // Theme store
 const themeKey = 'chord-app-theme';
-const storedTheme = isBrowser ? localStorage.getItem(themeKey) || 'system' : 'system';
-export const theme = writable<'light' | 'dark' | 'system'>(storedTheme as 'light' | 'dark' | 'system');
+export const defaultTheme = 'system' as const;
+const storedTheme = isBrowser ? localStorage.getItem(themeKey) : null;
+const initialTheme = storedTheme ? validateTheme(storedTheme) : defaultTheme;
+export const theme = writable<'light' | 'dark' | 'system'>(initialTheme);
 
 // Function to apply theme
 function applyTheme(value: 'light' | 'dark' | 'system') {
@@ -42,13 +44,15 @@ if (isBrowser) {
 	});
 	
 	// Apply initial theme
-	applyTheme(storedTheme as 'light' | 'dark' | 'system');
+	applyTheme(initialTheme);
 }
 
 // Auto-play audio store
 const autoPlayKey = 'chord-app-autoplay';
+export const defaultAutoPlay = true;
 const storedAutoPlay = isBrowser ? localStorage.getItem(autoPlayKey) : null;
-export const autoPlayAudio = writable<boolean>(storedAutoPlay !== null ? storedAutoPlay === 'true' : true);
+const initialAutoPlay = validateAutoPlay(storedAutoPlay === null ? null : storedAutoPlay === 'true');
+export const autoPlayAudio = writable<boolean>(initialAutoPlay);
 
 autoPlayAudio.subscribe((value) => {
 	if (isBrowser) {
@@ -71,9 +75,36 @@ const defaultFilters: FilterOptions = {
 	trulyRandom: false
 };
 
+// Validate and sanitize filter options to handle version changes
+function validateFilters(filters: any): FilterOptions {
+	const validated: FilterOptions = { ...defaultFilters };
+	
+	// Validate minChords (0-6)
+	if (typeof filters.minChords === 'number' && filters.minChords >= 0 && filters.minChords <= 6) {
+		validated.minChords = filters.minChords;
+	}
+	
+	// Validate maxChords (0-6, and must be >= minChords)
+	if (typeof filters.maxChords === 'number' && filters.maxChords >= 0 && filters.maxChords <= 6) {
+		validated.maxChords = Math.max(filters.maxChords, validated.minChords);
+	}
+	
+	// Validate chordType (0-4)
+	if (typeof filters.chordType === 'number' && filters.chordType >= 0 && filters.chordType <= 4) {
+		validated.chordType = filters.chordType;
+	}
+	
+	// Validate trulyRandom (boolean)
+	if (typeof filters.trulyRandom === 'boolean') {
+		validated.trulyRandom = filters.trulyRandom;
+	}
+	
+	return validated;
+}
+
 const filtersKey = 'chord-app-filters';
 const storedFilters = isBrowser ? localStorage.getItem(filtersKey) : null;
-const initialFilters = storedFilters ? JSON.parse(storedFilters) : defaultFilters;
+const initialFilters = storedFilters ? validateFilters(JSON.parse(storedFilters)) : defaultFilters;
 
 export const filters = writable<FilterOptions>(initialFilters);
 
@@ -107,10 +138,12 @@ export const memorizedBaseHue = writable<number | null>(null);
 // Loop state for progression playback
 export const loopPlayback = writable<boolean>(false);
 
-// Playback speed (0.5 = half speed, 1.0 = normal, 2.0 = double speed)
+// Playback speed (0.5 = half speed, 1.5 = normal/100%, 2.0 = faster)
 const playbackSpeedKey = 'chordProgressions:playbackSpeed';
+export const defaultPlaybackSpeed = 1.5;
 const storedPlaybackSpeed = isBrowser ? localStorage.getItem(playbackSpeedKey) : null;
-export const playbackSpeed = writable<number>(storedPlaybackSpeed ? parseFloat(storedPlaybackSpeed) : 1.0);
+const initialPlaybackSpeed = storedPlaybackSpeed ? validatePlaybackSpeed(storedPlaybackSpeed) : defaultPlaybackSpeed;
+export const playbackSpeed = writable<number>(initialPlaybackSpeed);
 
 if (isBrowser) {
 	playbackSpeed.subscribe((value) => {
@@ -230,9 +263,86 @@ export function generateRandomProgression(
 
 // Generate truly random progression
 function generateTrulyRandomProgression(filterOptions: FilterOptions): Progression {
+	// ========== PROBABILITY CONFIGURATION ==========
+	// Adjust these values to tune chord generation (each group should sum to 1.0)
+	
+	// Basic chord type distribution (for minimal and seventh modes)
+	const PROB_MAJOR = 0.5;       // Probability of major chord (minor is 1 - PROB_MAJOR)
+	
+	// Chord type variations distribution (for modes that include variations)
+	const VARIATION_WEIGHTS = {
+		'': 0.4,      // Major
+		'm': 0.4,     // Minor
+		'dim': 0.02,   // Diminished
+		'aug': 0.02,   // Augmented
+		'sus2': 0.08,  // Suspended 2nd
+		'sus4': 0.08   // Suspended 4th
+	};
+	
+	// Probability of adding seventh extensions
+	const PROB_ADD_7_TO_MAJOR = 0.33;       // Probability of adding dominant 7 to major chord
+	const PROB_ADD_MAJ7_TO_MAJOR = 0.33;    // Probability of adding maj7 to major chord
+	const PROB_ADD_7_TO_MINOR = 0.49;        // Probability of adding 7 to minor chord
+	const PROB_ADD_MAJ7_TO_MINOR = 0.01;     // Probability of adding maj7 to minor chord
+	// Note: For major chords, 7 and maj7 are mutually exclusive (total 0.7)
+	//       For minor chords, 7 and maj7 are mutually exclusive (total 0.7)
+	
+	// Probability of adding extensions by mode
+	const PROB_ADD_SEVENTH_MODE2 = 0.7;     // For "seventh only" mode
+	const PROB_ADD_SEVENTH_MODE3 = 0.6;     // For "seventh & variations" mode
+	const PROB_ADD_EXTENSION_MODE4 = 0.1;   // For "any" mode
+	
+	// Extended additions for "any" mode (excluding 7/maj7 which use specific probabilities)
+	const EXTENSION_WEIGHTS_BELOW_7 = {
+		'2': 0.2,      // Add 2nd
+		'4': 0.2,      // Add 4th
+		'5': 0.2,      // Add 5th
+		'6': 0.4       // Add 6th
+	};
+	
+	const EXTENSION_WEIGHTS_ABOVE_7 = {
+		'maj9': 0.01,  // Major ninth
+		'9': 0.32,     // Dominant ninth
+		'11': 0.33,    // Eleventh
+		'13': 0.33     // Thirteenth
+	};
+	
+	// ================================================
+	
+	// Helper function to select item based on weights
+	function weightedRandom<T extends string>(weights: Record<T, number>): T {
+		const rand = Math.random();
+		let cumulative = 0;
+		for (const [key, weight] of Object.entries(weights) as [T, number][]) {
+			cumulative += weight;
+			if (rand < cumulative) return key;
+		}
+		// Fallback to last item if rounding errors occur
+		return Object.keys(weights).pop() as T;
+	}
+	
+	// Helper function to add seventh extension based on chord type
+	function addSeventhExtension(type: string, probability: number): string[] {
+		if (Math.random() >= probability) return [];
+		
+		if (type === 'm') {
+			// Minor chord: choose between 7 and maj7
+			const rand = Math.random();
+			const totalProb = PROB_ADD_7_TO_MINOR + PROB_ADD_MAJ7_TO_MINOR;
+			return [rand < (PROB_ADD_7_TO_MINOR / totalProb) ? '7' : 'maj7'];
+		} else if (type === '') {
+			// Major chord: choose between 7 and maj7
+			const rand = Math.random();
+			const totalProb = PROB_ADD_7_TO_MAJOR + PROB_ADD_MAJ7_TO_MAJOR;
+			return [rand < (PROB_ADD_7_TO_MAJOR / totalProb) ? '7' : 'maj7'];
+		}
+		// For dim, aug, sus2, sus4 - no seventh extension
+		return [];
+	}
+	
 	// Random number of chords between min and max (but never more than 8 for 8+)
 	const minCount = filterOptions.minChords + 2;
-	const maxCount = filterOptions.maxChords === 6 ? 999 : filterOptions.maxChords + 2; // 6=8+ chords
+	const maxCount = filterOptions.maxChords === 6 ? 8 : filterOptions.maxChords + 2; // 6=8+ chords
 	const nbChords = Math.floor(Math.random() * (maxCount - minCount + 1)) + minCount;
 
 	// Random key
@@ -248,32 +358,40 @@ function generateTrulyRandomProgression(filterOptions: FilterOptions): Progressi
 
 		// Apply chord type filter
 		switch (filterOptions.chordType) {
-			case 0: // minimal - only basic major/minor
-				type = Math.random() < 0.5 ? '' : 'm';
+			case 0: // Minimal - only basic major/minor
+				type = Math.random() < PROB_MAJOR ? '' : 'm';
 				break;
-			case 1: // variations only - dim/aug/sus
-				const variations = ['', 'm', 'dim', 'aug', 'sus2', 'sus4'];
-				type = variations[Math.floor(Math.random() * variations.length)];
+				
+			case 1: // Variations only - dim/aug/sus
+				type = weightedRandom(VARIATION_WEIGHTS);
 				break;
-			case 2: // seventh only - basic + 7
-				type = Math.random() < 0.5 ? '' : 'm';
-				if (Math.random() < 0.7) {
-					add = [type === 'm' ? '7' : (Math.random() < 0.5 ? '7' : 'maj7')];
-				}
+				
+			case 2: // Seventh only - basic + 7
+				type = Math.random() < PROB_MAJOR ? '' : 'm';
+				add = addSeventhExtension(type, PROB_ADD_SEVENTH_MODE2);
 				break;
-			case 3: // seventh & variations
-				const allTypes = ['', 'm', 'dim', 'aug', 'sus2', 'sus4'];
-				type = allTypes[Math.floor(Math.random() * allTypes.length)];
-				if (Math.random() < 0.6) {
-					add = [type === 'm' ? '7' : (Math.random() < 0.5 ? '7' : 'maj7')];
-				}
+				
+			case 3: // Seventh & variations
+				type = weightedRandom(VARIATION_WEIGHTS);
+				add = addSeventhExtension(type, PROB_ADD_SEVENTH_MODE3);
 				break;
-			case 4: // any
-				const anyTypes = ['', 'm', 'dim', 'aug', 'sus2', 'sus4'];
-				type = anyTypes[Math.floor(Math.random() * anyTypes.length)];
-				if (Math.random() < 0.5) {
-					const additions = ['2', '4', '5', '6', 'maj7', '7', 'maj9', '9', '11', '13'];
-					add = [additions[Math.floor(Math.random() * additions.length)]];
+				
+			case 4: // Any - includes all extensions
+				type = weightedRandom(VARIATION_WEIGHTS);
+				if (Math.random() < PROB_ADD_EXTENSION_MODE4) {
+					// Decide whether to add extension below 7, a seventh, or above 7
+					const extensionType = Math.random();
+					
+					if (extensionType < 0.25) {
+						// Add extension below 7 (2, 4, 5, 6)
+						add = [weightedRandom(EXTENSION_WEIGHTS_BELOW_7)];
+					} else if (extensionType < 0.75) {
+						// Add seventh (7 or maj7)
+						add = addSeventhExtension(type, 1.0);
+					} else {
+						// Add extension above 7 (maj9, 9, 11, 13)
+						add = [weightedRandom(EXTENSION_WEIGHTS_ABOVE_7)];
+					}
 				}
 				break;
 		}
@@ -304,13 +422,65 @@ export const ukuleleTunings = [
 	['D', 'G', 'B', 'E'],  // Baritone Standard tuning
 ];
 
-const instrumentSettingsKey = 'chord-app-instrument-settings';
-const defaultInstrumentSettings: InstrumentSettings = {
+export const defaultInstrumentSettings: InstrumentSettings = {
 	type: 'piano',
 	ukuleleTuning: ukuleleTunings[0],
 };
+
+// Validate and sanitize instrument settings to handle version changes
+function validateInstrumentSettings(settings: any): InstrumentSettings {
+	const validated: InstrumentSettings = { ...defaultInstrumentSettings };
+	
+	// Validate type
+	const validTypes: InstrumentType[] = ['none', 'piano', 'guitar', 'ukulele'];
+	if (typeof settings.type === 'string' && validTypes.includes(settings.type as InstrumentType)) {
+		validated.type = settings.type as InstrumentType;
+	}
+	
+	// Validate ukuleleTuning
+	if (Array.isArray(settings.ukuleleTuning) && settings.ukuleleTuning.length === 4) {
+		// Check if it matches one of the known tunings
+		const isValidTuning = ukuleleTunings.some(tuning => 
+			tuning.length === settings.ukuleleTuning.length &&
+			tuning.every((note, idx) => note === settings.ukuleleTuning[idx])
+		);
+		if (isValidTuning) {
+			validated.ukuleleTuning = settings.ukuleleTuning;
+		}
+	}
+	
+	return validated;
+}
+
+// Validate theme to handle version changes
+function validateTheme(theme: any): 'light' | 'dark' | 'system' {
+	const validThemes = ['light', 'dark', 'system'];
+	if (typeof theme === 'string' && validThemes.includes(theme)) {
+		return theme as 'light' | 'dark' | 'system';
+	}
+	return defaultTheme;
+}
+
+// Validate playback speed to handle version changes
+function validatePlaybackSpeed(speed: any): number {
+	const parsed = typeof speed === 'string' ? parseFloat(speed) : speed;
+	if (typeof parsed === 'number' && !isNaN(parsed) && parsed >= 0.5 && parsed <= 5.0) {
+		return parsed;
+	}
+	return defaultPlaybackSpeed;
+}
+
+// Validate auto-play setting
+function validateAutoPlay(value: any): boolean {
+	if (value === null) return defaultAutoPlay;
+	if (typeof value === 'boolean') return value;
+	if (typeof value === 'string') return value === 'true';
+	return defaultAutoPlay;
+}
+
+const instrumentSettingsKey = 'chord-app-instrument-settings';
 const storedInstrumentSettings = isBrowser ? localStorage.getItem(instrumentSettingsKey) : null;
-const initialInstrumentSettings = storedInstrumentSettings ? JSON.parse(storedInstrumentSettings) : defaultInstrumentSettings;
+const initialInstrumentSettings = storedInstrumentSettings ? validateInstrumentSettings(JSON.parse(storedInstrumentSettings)) : defaultInstrumentSettings;
 
 export const instrumentSettings = writable<InstrumentSettings>(initialInstrumentSettings);
 
@@ -333,3 +503,29 @@ export const ukuleleSettings = derived(
 		tuning: $instrumentSettings.ukuleleTuning,
 	})
 );
+
+// Check if settings are at default
+export const isDefaultSettings = derived(
+	[theme, autoPlayAudio, playbackSpeed, instrumentSettings],
+	([$theme, $autoPlayAudio, $playbackSpeed, $instrumentSettings]) => {
+		// Helper to compare tuning arrays
+		const isSameTuning = (a: string[], b: string[]) => 
+			a.length === b.length && a.every((val, idx) => val === b[idx]);
+		
+		return (
+			$theme === defaultTheme &&
+			$autoPlayAudio === defaultAutoPlay &&
+			$playbackSpeed === defaultPlaybackSpeed &&
+			$instrumentSettings.type === defaultInstrumentSettings.type &&
+			isSameTuning($instrumentSettings.ukuleleTuning, defaultInstrumentSettings.ukuleleTuning)
+		);
+	}
+);
+
+// Reset function for settings
+export function resetSettings() {
+	theme.set(defaultTheme);
+	autoPlayAudio.set(defaultAutoPlay);
+	playbackSpeed.set(defaultPlaybackSpeed);
+	instrumentSettings.set({ ...defaultInstrumentSettings });
+}

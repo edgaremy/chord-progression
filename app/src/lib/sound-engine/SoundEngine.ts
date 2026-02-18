@@ -330,13 +330,15 @@ export class SoundEngine {
 	 * @param delayBetweenChords Interval between chord starts in seconds (default: uses config.delayBetweenChords)
 	 * @param velocity Velocity (0-1, default: 0.7)
 	 * @param onChordStart Optional callback called when each chord starts playing (receives chord index)
+	 * @param skipInitialDelay Whether to skip the initial delay (used for looping, default: false)
 	 */
 	async playProgression(
 		chordsNotes: string[][],
 		chordDuration: number = 1.5,
 		delayBetweenChords?: number,
 		velocity: number = 0.7,
-		onChordStart?: (chordIndex: number) => void
+		onChordStart?: (chordIndex: number) => void,
+		skipInitialDelay: boolean = false
 	): Promise<void> {
 		// Resume context if suspended (important for Safari/iOS)
 		const context = Tone.getContext();
@@ -372,7 +374,8 @@ export class SoundEngine {
 
 		// Use Tone.js scheduling for accurate timing
 		const now = Tone.now();
-		let currentTime = now + 0.1; // Small initial delay to ensure everything is ready
+		// Add initial delay only if not skipping (first playthrough needs it to ensure AudioContext is ready)
+		let currentTime = now + (skipInitialDelay ? 0 : 0.1);
 		let lastReleaseTimeout: ReturnType<typeof setTimeout> | null = null; // Track the last release timeout
 
 		for (let chordIndex = 0; chordIndex < chordsNotes.length; chordIndex++) {
@@ -460,10 +463,15 @@ export class SoundEngine {
 			currentTime += delay;
 		}
 
-		// Calculate total duration and return a promise that resolves when done
-		const totalDuration = chordsNotes.length * delay;
+		// Calculate when the last chord starts playing (relative to now)
+		// Last chord is at index (n-1), starts at initialDelay + (n-1) * delay
+		const initialDelay = skipInitialDelay ? 0 : 0.1;
+		const lastChordStartTime = initialDelay + (chordsNotes.length - 1) * delay;
+		
+		// Return a promise that resolves when the last chord STARTS
+		// This allows the loop to wait exactly 'delay' before starting the next cycle
 		return new Promise(resolve => {
-			const completionTimeout = setTimeout(() => resolve(), totalDuration * 1000);
+			const completionTimeout = setTimeout(() => resolve(), lastChordStartTime * 1000);
 			this.activeTimeouts.push(completionTimeout);
 		});
 	}
@@ -486,18 +494,19 @@ export class SoundEngine {
 		loop: boolean = false
 	): Promise<void> {
 		this.loopingPlayback = loop;
+		let isFirstPlay = true;
 		
 		const playOnce = async () => {
-			await this.playProgression(chordsNotes, chordDuration, delayBetweenChords, velocity, onChordStart);
+			// Skip initial delay on subsequent loops for seamless looping
+			await this.playProgression(chordsNotes, chordDuration, delayBetweenChords, velocity, onChordStart, !isFirstPlay);
+			isFirstPlay = false;
 			
 			// If still looping and not stopped, check if loop is still enabled in settings
 			const currentLoopSetting = get(loopPlayback);
 			if (this.loopingPlayback && loop && currentLoopSetting) {
-				// Account for the initial 0.1s delay in playProgression
-				// playProgression resolves after n*delay, but first chord starts at 0.1
-				// Last chord is at 0.1 + (n-1)*delay, next first chord should be at 0.1 + n*delay
-				// So we need to wait 0.1s after the promise resolves
-				const loopInterval = 100; // 0.1 seconds
+				// Use the same delay between chords for seamless looping
+				const delay = delayBetweenChords ?? this.config.delayBetweenChords;
+				const loopInterval = delay * 1000; // Convert to milliseconds
 				const loopTimeout = setTimeout(() => {
 					if (this.loopingPlayback) {
 						playOnce();
