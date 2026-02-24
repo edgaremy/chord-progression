@@ -2,6 +2,7 @@ import { writable, derived } from 'svelte/store';
 import { Progression } from '$lib/chords/Progression';
 import { Chord } from '$lib/chords/Chord';
 import { ProgManager } from '$lib/chords/ProgManager';
+import { Tuning, stringedInstruments } from './chords/Strings';
 
 // Browser check - safe for SSR
 const isBrowser = typeof window !== 'undefined';
@@ -413,18 +414,12 @@ export type InstrumentType = 'none' | 'piano' | 'guitar' | 'ukulele';
 
 export interface InstrumentSettings {
 	type: InstrumentType;
-	ukuleleTuning: string[];
+	tuning: Tuning;
 }
-
-export const ukuleleTunings = [
-	['G', 'C', 'E', 'A'],
-	['A', 'D', 'F#', 'B'], // "Traditional" Hawaiian tuning
-	['D', 'G', 'B', 'E'],  // Baritone Standard tuning
-];
 
 export const defaultInstrumentSettings: InstrumentSettings = {
 	type: 'piano',
-	ukuleleTuning: ukuleleTunings[0],
+	tuning: stringedInstruments[0].tunings[0], // Default to first tuning in first stringed instrument
 };
 
 // Validate and sanitize instrument settings to handle version changes
@@ -437,17 +432,7 @@ function validateInstrumentSettings(settings: any): InstrumentSettings {
 		validated.type = settings.type as InstrumentType;
 	}
 	
-	// Validate ukuleleTuning
-	if (Array.isArray(settings.ukuleleTuning) && settings.ukuleleTuning.length === 4) {
-		// Check if it matches one of the known tunings
-		const isValidTuning = ukuleleTunings.some(tuning => 
-			tuning.length === settings.ukuleleTuning.length &&
-			tuning.every((note, idx) => note === settings.ukuleleTuning[idx])
-		);
-		if (isValidTuning) {
-			validated.ukuleleTuning = settings.ukuleleTuning;
-		}
-	}
+	// TODO: Validate tuning
 	
 	return validated;
 }
@@ -490,17 +475,12 @@ instrumentSettings.subscribe((value) => {
 	}
 });
 
-// Legacy ukuleleSettings for backwards compatibility - derived from instrumentSettings
-export interface UkuleleSettings {
-	enabled: boolean;
-	tuning: string[];
-}
-
-export const ukuleleSettings = derived(
+// Derived store for string instrument settings
+export const stringSettings = derived(
 	instrumentSettings,
 	($instrumentSettings) => ({
 		enabled: $instrumentSettings.type === 'ukulele',
-		tuning: $instrumentSettings.ukuleleTuning,
+		tuning: $instrumentSettings.tuning,
 	})
 );
 
@@ -517,7 +497,7 @@ export const isDefaultSettings = derived(
 			$autoPlayAudio === defaultAutoPlay &&
 			$playbackSpeed === defaultPlaybackSpeed &&
 			$instrumentSettings.type === defaultInstrumentSettings.type &&
-			isSameTuning($instrumentSettings.ukuleleTuning, defaultInstrumentSettings.ukuleleTuning)
+			isSameTuning($instrumentSettings.tuning.strings || [], defaultInstrumentSettings.tuning.strings || [])
 		);
 	}
 );

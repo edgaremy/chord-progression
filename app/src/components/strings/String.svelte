@@ -1,29 +1,35 @@
 <script lang="ts">
-  import type { GuitarFingerPlacement } from "$lib/chords/Guitar";
+  import type { FingerPlacement } from "$lib/chords/Strings";
+  import { instrumentSettings } from "$lib/stores";
+  import { X } from "lucide-svelte";
 
   interface Props {
     fret: number;
     string: number;
-    allFingerPlacements: GuitarFingerPlacement[];
-    isFirstFret: boolean;
-    stringTuning: string;
+    fingerPlacements: FingerPlacement[];
   }
 
-  let { fret, string, allFingerPlacements, isFirstFret, stringTuning }: Props = $props();
-  
-  // Check if this string is muted (check all placements)
-  let isMuted = $derived(
-    allFingerPlacements.some(fp => fp.string === string && fp.muted)
+  let { fret, string, fingerPlacements }: Props = $props();
+
+  let stringFingerPlacements = $derived(
+    fingerPlacements.filter((fp) => fp.string === string),
   );
-  
+  let stringFretFingerPlacements = $derived(
+    stringFingerPlacements.filter((fp) => fp.fret === fret),
+  );
+
+  // Check if this is the first fret
+  let isFirstFret = $derived(fret === 1);
+
+  // Check if this string is muted
+  let isMuted = $derived(
+    stringFingerPlacements.some((fp) => fp.muted) || false,
+  );
+
   // Check if this string is played open (check all placements)
   let isOpen = $derived(
-    allFingerPlacements.some(fp => fp.string === string && fp.fret === 0 && !fp.muted)
-  );
-  
-  // Get finger placements for this string and fret
-  let fingerPlacements = $derived(
-    allFingerPlacements.filter(fp => fp.string === string && fp.fret === fret)
+    stringFingerPlacements.every((fp) => fp.fret === 0 && !fp.muted) &&
+      !isMuted,
   );
 </script>
 
@@ -32,21 +38,27 @@
     {#if isFirstFret}
       <div class="note">
         {#if isMuted}
-          <span class="muted">X</span>
+          <span class="muted">
+            <X />
+          </span>
         {:else if isOpen}
-          <span class="open">0</span>
+          <span class="open">
+            {$instrumentSettings.tuning?.strings[string - 1]}
+          </span>
+        {:else}
+          {$instrumentSettings.tuning?.strings[string - 1]}
         {/if}
       </div>
     {/if}
-    {#each fingerPlacements as fp}
-      {#if !fp.muted && fp.fret > 0}
+    {#each stringFretFingerPlacements as fp}
+      {#if !fp.muted}
         <div class="finger-placement" style="--length: {fp.barre}">
           {fp.finger}
         </div>
       {/if}
     {/each}
   </div>
-  {#if string !== 6}
+  {#if string !== $instrumentSettings.tuning?.strings.length}
     <div class="interval"></div>
   {/if}
 </div>
@@ -68,6 +80,7 @@
     position: absolute;
     top: calc(var(--ukulele-scale) * -0.3);
     left: calc(var(--string-width) / 2);
+    height: calc(var(--ukulele-scale) * 0.5);
     transform: translate(-50%, -50%);
     font-size: calc(var(--ukulele-scale) * 0.35);
     color: var(--string-color);

@@ -16,6 +16,7 @@ export default defineConfig({
 		alias: {
 			$lib: resolve('./src/lib'),
 			$assets: resolve('./src/assets'),
+			$components: resolve('./src/components'),
 		},
 	},
 	plugins: [

@@ -1,27 +1,47 @@
 <script lang="ts">
-  import { instrumentSettings, ukuleleTunings, type InstrumentType } from '$lib/stores';
+  import { instrumentSettings, type InstrumentType } from "$lib/stores";
+  import { stringedInstruments } from "$lib/chords/Strings";
 
   let isAnimating = $state(false);
 
-  // Check if current tuning is GCEA (default)
+  let instrumentTunings = $derived(
+    $instrumentSettings.type === "ukulele"
+      ? ukuleleTunings
+      : $instrumentSettings.type === "guitar"
+        ? guitarTunings
+        : [],
+  );
+
   let isDefaultTuning = $derived(
-    $instrumentSettings.ukuleleTuning.length === 4 &&
-    $instrumentSettings.ukuleleTuning[0] === 'G' &&
-    $instrumentSettings.ukuleleTuning[1] === 'C' &&
-    $instrumentSettings.ukuleleTuning[2] === 'E' &&
-    $instrumentSettings.ukuleleTuning[3] === 'A'
+    $instrumentSettings.tuning === instrumentTunings[0]
   );
 
   function setInstrument(type: InstrumentType) {
     $instrumentSettings.type = type;
   }
 
+  function setInstrumentUkulele() {
+    setInstrument("ukulele");
+    $instrumentSettings.tuning = ukuleleTunings[0];
+  }
+
+  function setInstrumentGuitar() {
+    setInstrument("guitar");
+    $instrumentSettings.tuning = guitarTunings[0];
+  }
+
+  function setInstrumentNone() {
+    setInstrument("none");
+  }
+
+  function setInstrumentPiano() {
+    setInstrument("piano");
+  }
+
   function rollTuning() {
-    const index = ukuleleTunings.findIndex(tuning => {
-      return tuning.every((note, string) => note === $instrumentSettings.ukuleleTuning[string]);
-    });
-    const nextIndex = (index + 1) % ukuleleTunings.length;
-    $instrumentSettings.ukuleleTuning = ukuleleTunings[nextIndex];
+    const index = instrumentTunings.findIndex(tuning => tuning === $instrumentSettings.tuning);
+    const nextIndex = (index + 1) % instrumentTunings.length;
+    $instrumentSettings.tuning = instrumentTunings[nextIndex];
   }
 
   function handleMouseDown() {
@@ -35,37 +55,42 @@
 
 <div class="container">
   <div class="instrument-buttons">
-    <button 
-      class="instrument-btn {$instrumentSettings.type === 'piano' ? 'active' : ''}" 
-      onclick={() => setInstrument('piano')}
+    <button
+      class="instrument-btn {$instrumentSettings.type === 'piano'
+        ? 'active'
+        : ''}"
+      onclick={setInstrumentPiano}
     >
       Piano
     </button>
-    <button 
-      class="instrument-btn {$instrumentSettings.type === 'guitar' ? 'active' : ''}" 
-      onclick={() => setInstrument('guitar')}
+    <button
+      class="instrument-btn {$instrumentSettings.type === 'guitar'
+        ? 'active'
+        : ''}"
+      onclick={setInstrumentGuitar}
     >
       Guitar
     </button>
-    <button 
-      class="instrument-btn {$instrumentSettings.type === 'ukulele' ? 'active' : ''}" 
-      onclick={() => setInstrument('ukulele')}
+    <button
+      class="instrument-btn {$instrumentSettings.type === 'ukulele'
+        ? 'active'
+        : ''}"
+      onclick={setInstrumentUkulele}
     >
       Ukulele
     </button>
-    <button 
-      class="instrument-btn {$instrumentSettings.type === 'none' ? 'active' : ''}" 
-      onclick={() => setInstrument('none')}
+    <button
+      class="instrument-btn {$instrumentSettings.type === 'none'
+        ? 'active'
+        : ''}"
+      onclick={setInstrumentNone}
     >
       None
     </button>
   </div>
 
-  {#if $instrumentSettings.type === 'ukulele'}
+  {#if $instrumentSettings.type === "ukulele" || $instrumentSettings.type === "guitar"}
     <div class="tuning-container">
-      {#if isDefaultTuning}
-        <span class="default-label">default tuning</span>
-      {/if}
       <button
         class="tuning {isAnimating ? 'rolling' : ''}"
         onmousedown={handleMouseDown}
@@ -73,11 +98,12 @@
         onclick={rollTuning}
       >
         <div class="tune">
-          {#each $instrumentSettings.ukuleleTuning as note}
-          <div class="tuning-note">{note}</div>
+          {#each $instrumentSettings.tuning.strings as note}
+            <div class="tuning-note">{note}</div>
           {/each}
         </div>
       </button>
+      <span class="tuning-name">{$instrumentSettings.tuning.name}</span>
     </div>
   {/if}
 </div>
@@ -130,7 +156,7 @@
     gap: 0.5rem;
   }
 
-  .default-label {
+  .tuning-name {
     font-size: 0.875rem;
     color: var(--text-secondary);
     opacity: 0.7;

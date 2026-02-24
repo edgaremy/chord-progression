@@ -84,6 +84,38 @@ export class Guitar {
 		// Return generic type if no match
 		return type;
 	}
+
+	/**
+	 * Combine finger placements into barre chords where possible
+	 */
+	static fingerPlacementsToBarred(placements: GuitarFingerPlacement[]): GuitarFingerPlacement[] {
+        return placements;
+		const barrePlacements: GuitarFingerPlacement[] = [];
+		for (const fingerId of [1, 2, 3, 4]) {
+			const fingerPlacements = placements.filter(p => p.finger === fingerId);
+			if (fingerPlacements.length == 0) continue;
+
+			// Create a barre placement
+			const minString = Math.min(...fingerPlacements.map(p => p.string));
+			const maxString = Math.max(...fingerPlacements.map(p => p.string));
+			const fret = fingerPlacements[0].fret;
+			barrePlacements.push({
+				string: minString,
+				fret: fret,
+				finger: fingerId,
+				barre: maxString - minString,
+			});
+		}
+
+		// Don't forget muted strings
+		for (const p of placements) {
+			if (p.muted) {
+				barrePlacements.push(p);
+			}
+		}
+
+		return barrePlacements;
+	}
 	
 	/**
 	 * Find guitar fingering for a chord
@@ -96,7 +128,7 @@ export class Guitar {
 		const shapeFingerPlacements = GuitarChords.getChordShape(chord.key, chordTypeString);
 		
 		if (shapeFingerPlacements) {
-			return shapeFingerPlacements;
+			return this.fingerPlacementsToBarred(shapeFingerPlacements);
 		}
 		
 		// Fall back to note-based construction
@@ -147,7 +179,7 @@ export class Guitar {
 		if (placements.filter(p => !p.muted).length < 3) {
 			return null;
 		}
-		
-		return placements;
+
+		return this.fingerPlacementsToBarred(placements);
 	}
 }

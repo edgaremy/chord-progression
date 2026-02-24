@@ -1,43 +1,52 @@
 <script lang="ts">
-  import type { FingerPlacement } from "$lib/chords/Ukulele";
-  import { ukuleleSettings } from "$lib/stores";
+  import type { GuitarFingerPlacement } from "$lib/chords/Guitar";
 
   interface Props {
     fret: number;
     string: number;
-    fingerPlacements: FingerPlacement[] | null;
+    allFingerPlacements: GuitarFingerPlacement[];
+    isFirstFret: boolean;
+    stringTuning: string;
   }
 
-  let { fret, string, fingerPlacements }: Props = $props();
+  let { fret, string, allFingerPlacements, isFirstFret, stringTuning }: Props = $props();
   
-  // Check if this string is muted
+  // Check if this string is muted (check all placements)
   let isMuted = $derived(
-    fingerPlacements?.some(fp => fp.string === string && fp.muted) || false
+    allFingerPlacements.some(fp => fp.string === string && fp.muted)
+  );
+  
+  // Check if this string is played open (check all placements)
+  let isOpen = $derived(
+    allFingerPlacements.some(fp => fp.string === string && fp.fret === 0 && !fp.muted)
+  );
+  
+  // Get finger placements for this string and fret
+  let fingerPlacements = $derived(
+    allFingerPlacements.filter(fp => fp.string === string && fp.fret === fret)
   );
 </script>
 
 <div class="container">
   <div class="string">
-    {#if fret === 1}
+    {#if isFirstFret}
       <div class="note">
         {#if isMuted}
           <span class="muted">X</span>
-        {:else}
-          {$ukuleleSettings.tuning[string - 1]}
+        {:else if isOpen}
+          <span class="open">0</span>
         {/if}
       </div>
     {/if}
-    {#if fingerPlacements}
-      {#each fingerPlacements as fp}
-        {#if !fp.muted}
-          <div class="finger-placement" style="--length: {fp.barre}">
-            {fp.finger}
-          </div>
-        {/if}
-      {/each}
-    {/if}
+    {#each fingerPlacements as fp}
+      {#if !fp.muted && fp.fret > 0}
+        <div class="finger-placement" style="--length: {fp.barre}">
+          {fp.finger}
+        </div>
+      {/if}
+    {/each}
   </div>
-  {#if string !== $ukuleleSettings.tuning.length}
+  {#if string !== 6}
     <div class="interval"></div>
   {/if}
 </div>
@@ -69,6 +78,10 @@
     color: var(--fret-color);
   }
 
+  .open {
+    color: var(--string-color);
+  }
+
   .interval {
     width: calc(var(--ukulele-scale) * 0.55);
   }
@@ -90,5 +103,6 @@
     font-size: calc(var(--ukulele-scale) * 0.3);
     font-weight: bold;
     color: var(--string-text);
+    z-index: 1;
   }
 </style>

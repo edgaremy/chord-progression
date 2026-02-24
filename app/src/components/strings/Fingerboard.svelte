@@ -1,7 +1,7 @@
 <script lang="ts">
-  import type { FingerPlacement } from "$lib/chords/Ukulele";
-  import String from "./String.svelte";
-  import { ukuleleSettings } from "$lib/stores";
+  import type { FingerPlacement } from "$lib/chords/Strings";
+  import { instrumentSettings } from "$lib/stores";
+  import String from "$components/strings/String.svelte";
 
   interface Props {
     fret: number;
@@ -9,23 +9,19 @@
   }
 
   let { fingerPlacements, fret }: Props = $props();
+
+  let isFirstFret = $derived(fret === 1);
 </script>
 
 <div class="container">
   <div class="fingerboard">
-    {#if fret === 1}
+    {#if isFirstFret}
       <div class="fret fret-0"></div>
     {/if}
     <div class="fret-and-strings">
       <div class="strings">
-        {#each $ukuleleSettings.tuning as _, string}
-          <String
-            {fret}
-            string={string + 1}
-            fingerPlacements={fingerPlacements.filter(
-              (fp) => fp.string === string + 1,
-            )}
-          />
+        {#each $instrumentSettings.tuning.strings as _, string}
+          <String {fret} string={string + 1} {fingerPlacements} />
         {/each}
       </div>
       <div class="fret"></div>

@@ -1,8 +1,8 @@
 <script lang="ts">
   import { Chord } from "$lib/chords/Chord";
-  import { chordToFingerPlacements } from "$lib/chords/Ukulele";
-  import { ukuleleSettings } from "$lib/stores";
-  import Fingerboard from "./Fingerboard.svelte";
+  import { chordToFingerPlacements } from "$lib/chords/Strings";
+  import { instrumentSettings } from "$lib/stores";
+  import Fingerboard from "$components/strings/Fingerboard.svelte";
 
   interface Props {
     chord: Chord;
@@ -10,24 +10,22 @@
 
   let { chord }: Props = $props();
 
-  let fingerPlacements = $derived(chordToFingerPlacements(chord, $ukuleleSettings.tuning));
+  let fingerPlacements = $derived(
+    chordToFingerPlacements(chord, $instrumentSettings.tuning),
+  );
 </script>
 
 <div class="neck">
-  {#each Array(5) as _, fret}
-    <Fingerboard
-      fret={fret + 1}
-      fingerPlacements={fingerPlacements
-        ? fingerPlacements.filter((fp) => fp.fret === fret + 1)
-        : []}
-    />
-  {/each}
   {#if fingerPlacements === null}
     <div class="error">
       No voicings found for this chord.<br />
       You should set chord type to<br />
       "seventh & variations" or lower.
     </div>
+  {:else}
+    {#each Array(5) as _, fret}
+      <Fingerboard fret={fret + 1} fingerPlacements={fingerPlacements || []} />
+    {/each}
   {/if}
 </div>
 

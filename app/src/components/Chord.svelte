@@ -1,59 +1,62 @@
 <script lang="ts">
-import type { Chord } from "$lib/chords/Chord";
-import { getSoundEngine } from "$lib/sound-engine";
-import UkuleleChord from "./UkuleleChord.svelte";
-import PianoChord from "./PianoChord.svelte";
-import GuitarChord from "./GuitarChord.svelte";
-import { instrumentSettings } from "$lib/stores";
+	import type { Chord } from "$lib/chords/Chord";
+	import { getSoundEngine } from "$lib/sound-engine";
+	import StringChord from "$components/strings/StringsChord.svelte";
+	import PianoChord from "$components/PianoChord.svelte";
+	import { instrumentSettings } from "$lib/stores";
 
-interface Props {
-chord: Chord;
-baseHue?: number;
-isPlaying?: boolean;
-}
-
-let { chord, baseHue = 0, isPlaying: externalIsPlaying = false }: Props = $props();
-
-let isPlaying = $state(false);
-let displayPlaying = $derived(isPlaying || externalIsPlaying);
-let hasInstrument = $derived($instrumentSettings.type !== 'none');
-
-function getChordColor(
-chord: Chord,
-baseHue: number,
-): { bg: string; text: string } {
-const bgColor = chord.getColor(baseHue);
-// Parse HSL to get hue value
-const hslMatch = bgColor.match(/hsl\((\d+),\s*(\d+)%,\s*(\d+)%\)/);
-if (hslMatch) {
-const [, h] = hslMatch;
-return {
-bg: `hsl(${h}, var(--chord-bg-saturation), var(--chord-bg-luminance))`,
-text: `hsl(${h}, var(--chord-text-saturation), var(--chord-text-luminance))`,
-};
-}
-return { bg: bgColor, text: "#ffffff" };
-}
-
-async function playChord() {
-	const soundEngine = getSoundEngine();
-	
-	isPlaying = true;
-	try {
-		const chordNotes = chord.getNotes();
-		await soundEngine.playChord(chordNotes, 2, 0.7);
-
-		// Wait for chord to finish playing
-		setTimeout(() => {
-			isPlaying = false;
-		}, 2000);
-	} catch (error) {
-		console.error("Error playing chord:", error);
-		isPlaying = false;
+	interface Props {
+		chord: Chord;
+		baseHue?: number;
+		isPlaying?: boolean;
 	}
-}
 
-let colors = $derived(getChordColor(chord, baseHue));
+	let {
+		chord,
+		baseHue = 0,
+		isPlaying: externalIsPlaying = false,
+	}: Props = $props();
+
+	let isPlaying = $state(false);
+	let displayPlaying = $derived(isPlaying || externalIsPlaying);
+	let hasInstrument = $derived($instrumentSettings.type !== "none");
+
+	function getChordColor(
+		chord: Chord,
+		baseHue: number,
+	): { bg: string; text: string } {
+		const bgColor = chord.getColor(baseHue);
+		// Parse HSL to get hue value
+		const hslMatch = bgColor.match(/hsl\((\d+),\s*(\d+)%,\s*(\d+)%\)/);
+		if (hslMatch) {
+			const [, h] = hslMatch;
+			return {
+				bg: `hsl(${h}, var(--chord-bg-saturation), var(--chord-bg-luminance))`,
+				text: `hsl(${h}, var(--chord-text-saturation), var(--chord-text-luminance))`,
+			};
+		}
+		return { bg: bgColor, text: "#ffffff" };
+	}
+
+	async function playChord() {
+		const soundEngine = getSoundEngine();
+
+		isPlaying = true;
+		try {
+			const chordNotes = chord.getNotes();
+			await soundEngine.playChord(chordNotes, 2, 0.7);
+
+			// Wait for chord to finish playing
+			setTimeout(() => {
+				isPlaying = false;
+			}, 2000);
+		} catch (error) {
+			console.error("Error playing chord:", error);
+			isPlaying = false;
+		}
+	}
+
+	let colors = $derived(getChordColor(chord, baseHue));
 </script>
 
 <button
@@ -69,12 +72,10 @@ let colors = $derived(getChordColor(chord, baseHue));
 		<span class="chord-name">
 			{chord.toString()}
 		</span>
-		{#if $instrumentSettings.type === 'piano'}
+		{#if $instrumentSettings.type === "piano"}
 			<PianoChord {chord} textColor={colors.text} />
-		{:else if $instrumentSettings.type === 'guitar'}
-			<GuitarChord {chord} />
-		{:else if $instrumentSettings.type === 'ukulele'}
-			<UkuleleChord {chord} />
+		{:else if $instrumentSettings.type === "guitar" || $instrumentSettings.type === "ukulele"}
+			<StringChord {chord} />
 		{/if}
 	</div>
 </button>
@@ -86,7 +87,9 @@ let colors = $derived(getChordColor(chord, baseHue));
 		align-items: center;
 		justify-content: center;
 		font-weight: bold;
-		transition: transform 0.12s, box-shadow none;
+		transition:
+			transform 0.12s,
+			box-shadow none;
 		border: none;
 		cursor: pointer;
 		font-family: inherit;
@@ -134,7 +137,7 @@ let colors = $derived(getChordColor(chord, baseHue));
 	}
 
 	@keyframes jump {
-		0%{
+		0% {
 			transform: translateY(5px);
 		}
 		10% {

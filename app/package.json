@@ -24,6 +24,7 @@
 	"type": "module",
 	"dependencies": {
 		"@mateothegreat/svelte5-router": "^2.16.19",
+		"lucide": "^0.575.0",
 		"lucide-svelte": "^0.563.0",
 		"tone": "^15.1.22"
 	}
