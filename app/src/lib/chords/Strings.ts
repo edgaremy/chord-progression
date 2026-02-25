@@ -321,7 +321,23 @@ function scoreVoicing(frets: number[]): number {
   const minFret = Math.min(...fretted);
   const span = Math.max(...fretted) - minFret;
   const sum = fretted.reduce((a, b) => a + b, 0);
-  return minFret * 3 + span * 2 + sum;
+  const mutedCount = frets.filter((f) => f === -1).length;
+
+  // Add mute penalty if muted strings are surrounded by played strings (e.g. 00X00X0 is not playable)
+  const muted = frets.map((f) => f === -1);
+  const mutedNoDouble = [muted[0]];
+  for (let i = 0; i < muted.length; i++) {
+    if (muted[i] !== muted[i - 1]) {
+      mutedNoDouble.push(muted[i]);
+    }
+  }
+  for (let i = 0; i < mutedNoDouble.length-2; i++) {
+    if (!mutedNoDouble[i] && mutedNoDouble[i+1] && !mutedNoDouble[i+2]) {
+      return 10000;
+    }
+  }
+
+  return minFret * 3 + span * 2 + sum + mutedCount * 2;
 }
 
 // ── Voicing search ──────────────────────────────────────────────────
