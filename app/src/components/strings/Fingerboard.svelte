@@ -1,14 +1,14 @@
 <script lang="ts">
-  import type { FingerPlacement } from "$lib/chords/Strings";
-  import { instrumentSettings } from "$lib/stores";
+  import type { FingerPlacement, Tuning } from "$lib/chords/Strings";
   import String from "$components/strings/String.svelte";
 
   interface Props {
+    tuning: Tuning;
     fret: number;
     fingerPlacements: FingerPlacement[];
   }
 
-  let { fingerPlacements, fret }: Props = $props();
+  let { tuning, fingerPlacements, fret }: Props = $props();
 
   let isFirstFret = $derived(fret === 1);
 </script>
@@ -20,8 +20,8 @@
     {/if}
     <div class="fret-and-strings">
       <div class="strings">
-        {#each $instrumentSettings.tuning.strings as _, string}
-          <String {fret} string={string + 1} {fingerPlacements} />
+        {#each tuning.strings as _, string}
+          <String tuning={tuning} {fret} string={string + 1} {fingerPlacements} />
         {/each}
       </div>
       <div class="fret"></div>

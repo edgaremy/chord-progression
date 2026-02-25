@@ -1,4 +1,5 @@
 import { Chord } from "./Chord";
+import { Instrument, InstrumentInstance } from "./Instrument";
 
 /**
  * A stringed instrument tuning.
@@ -33,14 +34,42 @@ export interface FingerPlacement {
  * A stringed instrument definition.
  * name: e.g. "Guitar", "Ukulele"
  * tunings: a list of tunings available for this instrument
+ * tuning: the currently selected tuning index in the tunings array
  */
-export interface StringedInstrument {
-  name: string;
+export interface StringedInstrument extends Instrument {
   tunings: Tuning[];
+}
+
+/**
+ * Check if an object is a StringedInstrument by verifying it has the required properties.
+ * @param obj the object to test
+ * @return whether obj is a StringedInstrument
+ */
+export function isStringedInstrument(obj: any): obj is StringedInstrument {
+  return (obj && typeof obj === "object" && "tunings" in obj && Array.isArray(obj.tunings));
+}
+
+/**
+ * A stringed instrument instance with a specific tuning.
+ * name: e.g. "Guitar", "Ukulele"
+ * tuning: the currently selected tuning
+ */
+export interface StringedInstrumentInstance extends InstrumentInstance<StringedInstrument> {
+  tuning: Tuning;
+}
+
+/**
+ * Check if an object is a StringedInstrumentInstance by verifying it has the required properties.
+ * @param obj the object to test
+ * @returns wether obj is an StringedInstrumentInstance
+ */
+export function isStringedInstrumentInstance(obj: any): obj is StringedInstrumentInstance {
+  return obj && typeof obj === "object" && obj.instrument && obj.tuning;
 }
 
 export const guitar: StringedInstrument = {
   name: "Guitar",
+  image: "/src/assets/guitar.svg",
   tunings: [
     {
       name: "Standard Guitar",
@@ -57,6 +86,7 @@ export const guitar: StringedInstrument = {
 
 export const ukulele: StringedInstrument = {
   name: "Ukulele",
+  image: "/src/assets/ukulele.svg",
   tunings: [
     {
       name: "Standard Ukulele",
@@ -291,8 +321,7 @@ function scoreVoicing(frets: number[]): number {
   const minFret = Math.min(...fretted);
   const span = Math.max(...fretted) - minFret;
   const sum = fretted.reduce((a, b) => a + b, 0);
-  const mutedCount = frets.filter((f) => f === -1).length;
-  return minFret * 3 + span * 2 + sum + mutedCount * 5;
+  return minFret * 3 + span * 2 + sum;
 }
 
 // ── Voicing search ──────────────────────────────────────────────────
@@ -372,8 +401,5 @@ export function chordToFingerPlacements(
 
   // Pick the best voicing (lowest score)
   voicings.sort((a, b) => scoreVoicing(a) - scoreVoicing(b));
-  console.log(`Best voicing for ${chord.key}${chord.type}${chord.add.join("")}${chord.mod.join("")} on ${tuning.name}:`, voicings[0]);
-  const a = fretsToFingerPlacements(voicings[0]);
-  console.log("Finger placements:", a);
-  return a;
+  return fretsToFingerPlacements(voicings[0]);
 }

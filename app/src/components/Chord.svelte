@@ -3,7 +3,9 @@
 	import { getSoundEngine } from "$lib/sound-engine";
 	import StringChord from "$components/strings/StringsChord.svelte";
 	import PianoChord from "$components/PianoChord.svelte";
-	import { instrumentSettings } from "$lib/stores";
+	import { instrumentInstance } from "$lib/stores";
+	import { isStringedInstrumentInstance } from "$lib/chords/Strings";
+  import { piano } from "$lib/chords/Piano";
 
 	interface Props {
 		chord: Chord;
@@ -19,7 +21,7 @@
 
 	let isPlaying = $state(false);
 	let displayPlaying = $derived(isPlaying || externalIsPlaying);
-	let hasInstrument = $derived($instrumentSettings.type !== "none");
+	let hasInstrument = $derived($instrumentInstance !== null);
 
 	function getChordColor(
 		chord: Chord,
@@ -72,10 +74,10 @@
 		<span class="chord-name">
 			{chord.toString()}
 		</span>
-		{#if $instrumentSettings.type === "piano"}
+		{#if $instrumentInstance?.instrument === piano}
 			<PianoChord {chord} textColor={colors.text} />
-		{:else if $instrumentSettings.type === "guitar" || $instrumentSettings.type === "ukulele"}
-			<StringChord {chord} />
+		{:else if isStringedInstrumentInstance($instrumentInstance)}
+			<StringChord instrument={$instrumentInstance} {chord} />
 		{/if}
 	</div>
 </button>

@@ -1,17 +1,20 @@
 <script lang="ts">
   import { Chord } from "$lib/chords/Chord";
   import { chordToFingerPlacements } from "$lib/chords/Strings";
-  import { instrumentSettings } from "$lib/stores";
+  import type { StringedInstrumentInstance } from "$lib/chords/Strings";
   import Fingerboard from "$components/strings/Fingerboard.svelte";
 
   interface Props {
+    instrument: StringedInstrumentInstance;
     chord: Chord;
   }
 
-  let { chord }: Props = $props();
+  let { instrument, chord }: Props = $props();
+
+  let tuning = $derived(instrument.tuning);
 
   let fingerPlacements = $derived(
-    chordToFingerPlacements(chord, $instrumentSettings.tuning),
+    chordToFingerPlacements(chord, tuning),
   );
 </script>
 
@@ -24,7 +27,7 @@
     </div>
   {:else}
     {#each Array(5) as _, fret}
-      <Fingerboard fret={fret + 1} fingerPlacements={fingerPlacements || []} />
+      <Fingerboard tuning={tuning} fret={fret + 1} fingerPlacements={fingerPlacements || []} />
     {/each}
   {/if}
 </div>
@@ -44,16 +47,12 @@
   .error {
     white-space: nowrap;
     padding: calc(var(--ukulele-scale) * 0.2);
-    position: absolute;
     text-align: center;
     font-size: calc(var(--ukulele-scale) * 0.25);
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
     background-color: var(--string-color);
     color: var(--string-text);
     border-radius: calc(var(--ukulele-scale) * 0.15);
-    box-shadow: 0px calc(var(--ukulele-scale) * 0.25) 0px var(--fret-color);
+    box-shadow: 0px calc(var(--ukulele-scale) * 0.15) 0px var(--fret-color);
     border: calc(var(--ukulele-scale) * 0.08) solid var(--fret-color);
     z-index: 3;
   }

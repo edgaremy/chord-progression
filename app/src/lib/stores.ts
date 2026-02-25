@@ -2,7 +2,9 @@ import { writable, derived } from 'svelte/store';
 import { Progression } from '$lib/chords/Progression';
 import { Chord } from '$lib/chords/Chord';
 import { ProgManager } from '$lib/chords/ProgManager';
-import { Tuning, stringedInstruments } from './chords/Strings';
+import { StringedInstrument, StringedInstrumentInstance, Tuning, isStringedInstrument, stringedInstruments } from './chords/Strings';
+import { Instrument, InstrumentInstance } from './chords/Instrument';
+import { piano } from './chords/Piano';
 
 // Browser check - safe for SSR
 const isBrowser = typeof window !== 'undefined';
@@ -409,32 +411,39 @@ export function resetFilters() {
 	filters.set({ ...defaultFilters });
 }
 
-// Instrument settings
-export type InstrumentType = 'none' | 'piano' | 'guitar' | 'ukulele';
+// Instrument store
+export const defaultInstrument: InstrumentInstance<Instrument> | null = null;
 
-export interface InstrumentSettings {
-	type: InstrumentType;
-	tuning: Tuning;
-}
+// Validate and sanitize instrument to handle version changes
+function validateInstrument(settings: any): InstrumentInstance<Instrument> | null {
+	if (settings === null) return null;
 
-export const defaultInstrumentSettings: InstrumentSettings = {
-	type: 'piano',
-	tuning: stringedInstruments[0].tunings[0], // Default to first tuning in first stringed instrument
-};
-
-// Validate and sanitize instrument settings to handle version changes
-function validateInstrumentSettings(settings: any): InstrumentSettings {
-	const validated: InstrumentSettings = { ...defaultInstrumentSettings };
-	
-	// Validate type
-	const validTypes: InstrumentType[] = ['none', 'piano', 'guitar', 'ukulele'];
-	if (typeof settings.type === 'string' && validTypes.includes(settings.type as InstrumentType)) {
-		validated.type = settings.type as InstrumentType;
+	if (typeof settings !== 'object' || !('instrument' in settings)) {
+		return defaultInstrument;
 	}
-	
-	// TODO: Validate tuning
-	
-	return validated;
+
+	if (settings.instrument.name === 'Piano') {
+		return { instrument: piano };
+	}
+
+	if (isStringedInstrument(settings.instrument)) {
+		// Find matching instrument from stringedInstruments by name
+		const matched = stringedInstruments.find(instr => instr.name === settings.instrument.name);
+		if (!matched) {
+			return defaultInstrument;
+		}
+
+		// Validate tuning
+		const tuningName = settings.tuning?.name;
+		const validTuning = matched.tunings.find(t => t.name === tuningName) || matched.tunings[0];
+
+		return {
+			instrument: matched,
+			tuning: validTuning
+		} as StringedInstrumentInstance;
+	}
+
+	return defaultInstrument;
 }
 
 // Validate theme to handle version changes
@@ -463,41 +472,27 @@ function validateAutoPlay(value: any): boolean {
 	return defaultAutoPlay;
 }
 
-const instrumentSettingsKey = 'chord-app-instrument-settings';
-const storedInstrumentSettings = isBrowser ? localStorage.getItem(instrumentSettingsKey) : null;
-const initialInstrumentSettings = storedInstrumentSettings ? validateInstrumentSettings(JSON.parse(storedInstrumentSettings)) : defaultInstrumentSettings;
+const instrumentKey = 'chord-app-instrument';
+const storedInstrument = isBrowser ? localStorage.getItem(instrumentKey) : null;
+const initialInstrument = storedInstrument ? validateInstrument(JSON.parse(storedInstrument)) : defaultInstrument;
 
-export const instrumentSettings = writable<InstrumentSettings>(initialInstrumentSettings);
+export const instrumentInstance = writable<InstrumentInstance<Instrument> | null>(initialInstrument);
 
-instrumentSettings.subscribe((value) => {
+instrumentInstance.subscribe((value) => {
 	if (isBrowser) {
-		localStorage.setItem(instrumentSettingsKey, JSON.stringify(value));
+		localStorage.setItem(instrumentKey, JSON.stringify(value));
 	}
 });
 
-// Derived store for string instrument settings
-export const stringSettings = derived(
-	instrumentSettings,
-	($instrumentSettings) => ({
-		enabled: $instrumentSettings.type === 'ukulele',
-		tuning: $instrumentSettings.tuning,
-	})
-);
-
 // Check if settings are at default
 export const isDefaultSettings = derived(
-	[theme, autoPlayAudio, playbackSpeed, instrumentSettings],
-	([$theme, $autoPlayAudio, $playbackSpeed, $instrumentSettings]) => {
-		// Helper to compare tuning arrays
-		const isSameTuning = (a: string[], b: string[]) => 
-			a.length === b.length && a.every((val, idx) => val === b[idx]);
-		
+	[theme, autoPlayAudio, playbackSpeed, instrumentInstance],
+	([$theme, $autoPlayAudio, $playbackSpeed, $instrument]) => {
 		return (
 			$theme === defaultTheme &&
 			$autoPlayAudio === defaultAutoPlay &&
 			$playbackSpeed === defaultPlaybackSpeed &&
-			$instrumentSettings.type === defaultInstrumentSettings.type &&
-			isSameTuning($instrumentSettings.tuning.strings || [], defaultInstrumentSettings.tuning.strings || [])
+			$instrument === defaultInstrument
 		);
 	}
 );
@@ -507,5 +502,5 @@ export function resetSettings() {
 	theme.set(defaultTheme);
 	autoPlayAudio.set(defaultAutoPlay);
 	playbackSpeed.set(defaultPlaybackSpeed);
-	instrumentSettings.set({ ...defaultInstrumentSettings });
+	instrumentInstance.set(defaultInstrument);
 }

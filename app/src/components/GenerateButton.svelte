@@ -1,10 +1,5 @@
 <script lang="ts">
-	import trumpet from "$assets/trumpet.svg";
-	import ukulele from "$assets/ukulele.svg";
-	import piano from "$assets/piano.svg";
-	import guitar from "$assets/guitar.svg";
-
-	import { instrumentSettings } from "$lib/stores";
+	import { instrumentInstance } from "$lib/stores";
 
 	interface Props {
 		size?: number;
@@ -12,16 +7,6 @@
 	}
 
 	let { size = 70, onClick }: Props = $props();
-
-	let icon = $derived(
-		$instrumentSettings.type === "piano"
-			? piano
-			: $instrumentSettings.type === "guitar"
-				? guitar
-				: $instrumentSettings.type === "ukulele"
-					? ukulele
-					: trumpet,
-	);
 </script>
 
 <button
@@ -31,7 +16,7 @@
 	style="--button-size: {size}px"
 >
 	<img
-		src={icon}
+		src={$instrumentInstance?.instrument.image}
 		alt="Generate"
 		class="generate-icon"
 		style="width: {size * 0.65}px; height: {size * 0.65}px;"

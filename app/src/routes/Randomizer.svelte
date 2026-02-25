@@ -13,7 +13,7 @@
 		autoPlayAudio,
 		loopPlayback,
 		playbackSpeed,
-		instrumentSettings,
+		instrumentInstance,
 	} from "$lib/stores";
 	import { getSoundEngine } from "$lib/sound-engine";
 	import GenerateButton from "../components/GenerateButton.svelte";
@@ -34,8 +34,8 @@
 	let isLooping = $state($loopPlayback);
 	let playingChordIndex = $state<number | null>(null);
 	let isPlaying = $state(false);
-	let hasInstrument = $derived($instrumentSettings.type !== "none");
-	let hasPiano = $derived($instrumentSettings.type === "piano");
+	let hasInstrument = $derived($instrumentInstance !== null);
+	let hasPiano = $derived($instrumentInstance === "piano");
 
 	async function generateProgression() {
 		// Check if we have a memorized prog to retrieve

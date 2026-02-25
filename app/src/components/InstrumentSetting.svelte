@@ -1,110 +1,54 @@
 <script lang="ts">
-  import { instrumentSettings, type InstrumentType } from "$lib/stores";
-  import { stringedInstruments } from "$lib/chords/Strings";
+  import { allInstruments, type Instrument, type InstrumentInstance } from "$lib/chords/Instrument";
+  import { isStringedInstrument, isStringedInstrumentInstance, type StringedInstrumentInstance } from "$lib/chords/Strings";
+  import { instrumentInstance } from "$lib/stores";
+  import TuningSetting from "./strings/TuningSetting.svelte";
 
-  let isAnimating = $state(false);
+  function setInstrument(newInstrument: Instrument | null) {
+    if (newInstrument === null) {
+      instrumentInstance.set(null);
+      return;
+    }
 
-  let instrumentTunings = $derived(
-    $instrumentSettings.type === "ukulele"
-      ? ukuleleTunings
-      : $instrumentSettings.type === "guitar"
-        ? guitarTunings
-        : [],
-  );
+    if (isStringedInstrument(newInstrument)) {
+      // If it's a stringed instrument, set it with the first tuning by default
+      const defaultTuning = newInstrument.tunings[0];
+      const newInstance: StringedInstrumentInstance = {
+        instrument: newInstrument,
+        tuning: defaultTuning,
+      };
+      instrumentInstance.set(newInstance);
+      return;
+    }
 
-  let isDefaultTuning = $derived(
-    $instrumentSettings.tuning === instrumentTunings[0]
-  );
-
-  function setInstrument(type: InstrumentType) {
-    $instrumentSettings.type = type;
-  }
-
-  function setInstrumentUkulele() {
-    setInstrument("ukulele");
-    $instrumentSettings.tuning = ukuleleTunings[0];
-  }
-
-  function setInstrumentGuitar() {
-    setInstrument("guitar");
-    $instrumentSettings.tuning = guitarTunings[0];
-  }
-
-  function setInstrumentNone() {
-    setInstrument("none");
-  }
-
-  function setInstrumentPiano() {
-    setInstrument("piano");
-  }
-
-  function rollTuning() {
-    const index = instrumentTunings.findIndex(tuning => tuning === $instrumentSettings.tuning);
-    const nextIndex = (index + 1) % instrumentTunings.length;
-    $instrumentSettings.tuning = instrumentTunings[nextIndex];
-  }
-
-  function handleMouseDown() {
-    isAnimating = true;
-  }
-
-  function handleMouseUp() {
-    isAnimating = false;
+    // For other instruments, just set the instrument without additional settings.
+    const newInstance: InstrumentInstance<Instrument> = {
+      instrument: newInstrument,
+    };
+    instrumentInstance.set(newInstance);
   }
 </script>
 
 <div class="container">
   <div class="instrument-buttons">
+    {#each allInstruments as instr}
+      <button
+        class="instrument-btn {$instrumentInstance?.instrument?.name === instr.name ? 'active' : ''}"
+        onclick={() => setInstrument(instr)}
+      >
+        {instr.name}
+      </button>
+    {/each}
     <button
-      class="instrument-btn {$instrumentSettings.type === 'piano'
-        ? 'active'
-        : ''}"
-      onclick={setInstrumentPiano}
-    >
-      Piano
-    </button>
-    <button
-      class="instrument-btn {$instrumentSettings.type === 'guitar'
-        ? 'active'
-        : ''}"
-      onclick={setInstrumentGuitar}
-    >
-      Guitar
-    </button>
-    <button
-      class="instrument-btn {$instrumentSettings.type === 'ukulele'
-        ? 'active'
-        : ''}"
-      onclick={setInstrumentUkulele}
-    >
-      Ukulele
-    </button>
-    <button
-      class="instrument-btn {$instrumentSettings.type === 'none'
-        ? 'active'
-        : ''}"
-      onclick={setInstrumentNone}
+      class="instrument-btn {$instrumentInstance === null ? 'active' : ''}"
+      onclick={() => setInstrument(null)}
     >
       None
     </button>
   </div>
 
-  {#if $instrumentSettings.type === "ukulele" || $instrumentSettings.type === "guitar"}
-    <div class="tuning-container">
-      <button
-        class="tuning {isAnimating ? 'rolling' : ''}"
-        onmousedown={handleMouseDown}
-        onmouseup={handleMouseUp}
-        onclick={rollTuning}
-      >
-        <div class="tune">
-          {#each $instrumentSettings.tuning.strings as note}
-            <div class="tuning-note">{note}</div>
-          {/each}
-        </div>
-      </button>
-      <span class="tuning-name">{$instrumentSettings.tuning.name}</span>
-    </div>
+  {#if isStringedInstrumentInstance($instrumentInstance)}
+    <TuningSetting instrumentInstance={$instrumentInstance} />
   {/if}
 </div>
 
@@ -148,75 +92,5 @@
   .instrument-btn:focus-visible {
     outline: 2px solid var(--accent-primary);
     outline-offset: 2px;
-  }
-
-  .tuning-container {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-  }
-
-  .tuning-name {
-    font-size: 0.875rem;
-    color: var(--text-secondary);
-    opacity: 0.7;
-    font-style: italic;
-  }
-
-  .tuning {
-    min-width: 6rem;
-    background: transparent;
-    color: var(--text-secondary);
-    border: none;
-    border-radius: 9999px;
-    padding: 0.5rem 1rem;
-    cursor: pointer;
-    font-size: 1rem;
-    font-weight: 500;
-    transition: all 0.3s ease;
-    overflow: hidden;
-  }
-
-  .tune {
-    display: flex;
-    align-items: center;
-    gap: 0.25rem;
-    justify-content: center;
-    animation: tuneUp 0.2s ease-out forwards;
-  }
-
-  .tuning:hover {
-    color: var(--text-primary);
-  }
-
-  .tuning:focus-visible {
-    outline: 2px solid var(--accent-primary);
-    outline-offset: 2px;
-  }
-
-  @keyframes tuneDown {
-    from {
-      transform: translateY(0);
-    }
-    to {
-      transform: translateY(2rem);
-    }
-  }
-
-  @keyframes tuneUp {
-    from {
-      transform: translateY(-2rem);
-    }
-    to {
-      transform: translateY(0);
-    }
-  }
-
-  .tuning.rolling {
-    background-color: var(--bg-primary);
-  }
-
-  .tuning.rolling .tune {
-    animation: tuneDown 0.2s ease-in forwards;
   }
 </style>

@@ -1,15 +1,15 @@
 <script lang="ts">
-  import type { FingerPlacement } from "$lib/chords/Strings";
-  import { instrumentSettings } from "$lib/stores";
+  import type { FingerPlacement, Tuning } from "$lib/chords/Strings";
   import { X } from "lucide-svelte";
 
   interface Props {
+    tuning: Tuning;
     fret: number;
     string: number;
     fingerPlacements: FingerPlacement[];
   }
 
-  let { fret, string, fingerPlacements }: Props = $props();
+  let { tuning, fret, string, fingerPlacements }: Props = $props();
 
   let stringFingerPlacements = $derived(
     fingerPlacements.filter((fp) => fp.string === string),
@@ -43,10 +43,10 @@
           </span>
         {:else if isOpen}
           <span class="open">
-            {$instrumentSettings.tuning?.strings[string - 1]}
+            {tuning.strings[string - 1]}
           </span>
         {:else}
-          {$instrumentSettings.tuning?.strings[string - 1]}
+          {tuning.strings[string - 1]}
         {/if}
       </div>
     {/if}
@@ -58,7 +58,7 @@
       {/if}
     {/each}
   </div>
-  {#if string !== $instrumentSettings.tuning?.strings.length}
+  {#if string !== tuning.strings.length}
     <div class="interval"></div>
   {/if}
 </div>

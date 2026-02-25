@@ -1,3 +1,26 @@
+import { Instrument, InstrumentInstance } from "./Instrument";
+
+/**
+ * Defines the Piano interface extending the base Instrument interface.
+ * This allows us to represent a piano as an instrument with a name and image,
+ * while also providing a clear type for piano-specific functionality in the future.
+ */
+export interface Piano extends Instrument {
+	// No additional properties needed for now, but this allows us to easily extend in the future
+}
+
+/**
+ * Export a constant interface for the piano instrument instance.
+ */
+export interface PianoInstance extends InstrumentInstance<Piano> {
+	instrument: Piano;
+}
+
+export const piano: Piano = {
+	name: "Piano",
+	image: "/src/assets/piano.svg",
+};
+
 // Piano-related utilities and types
 export interface PianoKey {
 	note: string;
