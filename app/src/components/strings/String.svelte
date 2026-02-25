@@ -7,15 +7,16 @@
     fret: number;
     string: number;
     fingerPlacements: FingerPlacement[];
+    offset: number;
   }
 
-  let { tuning, fret, string, fingerPlacements }: Props = $props();
+  let { tuning, fret, string, fingerPlacements, offset }: Props = $props();
 
   let stringFingerPlacements = $derived(
     fingerPlacements.filter((fp) => fp.string === string),
   );
   let stringFretFingerPlacements = $derived(
-    stringFingerPlacements.filter((fp) => fp.fret === fret),
+    stringFingerPlacements.filter((fp) => fp.fret === fret + offset),
   );
 
   // Check if this is the first fret

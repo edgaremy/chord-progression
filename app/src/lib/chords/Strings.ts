@@ -109,8 +109,8 @@ export const ukulele: StringedInstrument = {
 export const stringedInstruments: StringedInstrument[] = [guitar, ukulele];
 
 
-const MAX_FRET = 12;
-const MAX_SPAN = 6; // max fret span for a playable voicing
+export const MAX_FRET = 12;
+export const MAX_SPAN = 5; // max fret span for a playable voicing
 
 // ── Helpers: note/semitone mapping ──────────────────────────────────
 
@@ -274,7 +274,7 @@ function getValidFretsPerString(
 ): number[][] {
   return tuning.strings.map((openNote) => {
     const valid: number[] = [-1]; // include muted option
-    for (let fret = 0; fret <= MAX_FRET; fret++) {
+    for (let fret = tuning.capo; fret <= MAX_FRET; fret++) {
       if (targetNotes.has(fretToSemitone(openNote, fret))) {
         valid.push(fret);
       }
@@ -337,7 +337,7 @@ function scoreVoicing(frets: number[]): number {
     }
   }
 
-  return minFret * 3 + span * 2 + sum + mutedCount * 2;
+  return minFret * 3 + span * 2 + sum + mutedCount * 100000;
 }
 
 // ── Voicing search ──────────────────────────────────────────────────

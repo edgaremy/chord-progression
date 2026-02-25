@@ -3,12 +3,13 @@
   import String from "$components/strings/String.svelte";
 
   interface Props {
+    offset: number;
     tuning: Tuning;
     fret: number;
     fingerPlacements: FingerPlacement[];
   }
 
-  let { tuning, fingerPlacements, fret }: Props = $props();
+  let { offset, tuning, fingerPlacements, fret }: Props = $props();
 
   let isFirstFret = $derived(fret === 1);
 </script>
@@ -17,11 +18,22 @@
   <div class="fingerboard">
     {#if isFirstFret}
       <div class="fret fret-0"></div>
+      {#if offset > 0}
+        <div class="offset">
+          {offset}
+        </div>
+      {/if}
     {/if}
     <div class="fret-and-strings">
       <div class="strings">
         {#each tuning.strings as _, string}
-          <String tuning={tuning} {fret} string={string + 1} {fingerPlacements} />
+          <String
+            {tuning}
+            {fret}
+            string={string + 1}
+            {fingerPlacements}
+            {offset}
+          />
         {/each}
       </div>
       <div class="fret"></div>
@@ -72,5 +84,13 @@
     width: 100%;
     background-color: var(--fret-color);
     z-index: 2; /* Top fret is above strings */
+  }
+
+  .offset {
+    position: absolute;
+    left: 0;
+    top: 50%;
+    transform: translate(-100%, -50%);
+    padding-right: calc(var(--ukulele-scale) * 0.1);
   }
 </style>

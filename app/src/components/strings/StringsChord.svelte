@@ -1,6 +1,6 @@
 <script lang="ts">
   import { Chord } from "$lib/chords/Chord";
-  import { chordToFingerPlacements } from "$lib/chords/Strings";
+  import { chordToFingerPlacements, MAX_SPAN } from "$lib/chords/Strings";
   import type { StringedInstrumentInstance } from "$lib/chords/Strings";
   import Fingerboard from "$components/strings/Fingerboard.svelte";
 
@@ -13,8 +13,20 @@
 
   let tuning = $derived(instrument.tuning);
 
-  let fingerPlacements = $derived(
-    chordToFingerPlacements(chord, tuning),
+  let fingerPlacements = $derived(chordToFingerPlacements(chord, tuning));
+
+  let minFret = $derived(
+    fingerPlacements === null
+      ? 0
+      : Math.min(...fingerPlacements.filter((fp) => !fp.muted).map((fp) => fp.fret)),
+  );
+  let maxFret = $derived(
+    fingerPlacements === null
+      ? 0
+      : Math.max(...fingerPlacements.filter((fp) => !fp.muted).map((fp) => fp.fret)),
+  );
+  let offset = $derived(
+    fingerPlacements === null ? 0 : maxFret > MAX_SPAN ? minFret - 1 : 0,
   );
 </script>
 
@@ -26,8 +38,13 @@
       "seventh & variations" or lower.
     </div>
   {:else}
-    {#each Array(5) as _, fret}
-      <Fingerboard tuning={tuning} fret={fret + 1} fingerPlacements={fingerPlacements || []} />
+    {#each Array(MAX_SPAN) as _, fret}
+      <Fingerboard
+        {offset}
+        {tuning}
+        fret={fret + 1}
+        fingerPlacements={fingerPlacements || []}
+      />
     {/each}
   {/if}
 </div>
