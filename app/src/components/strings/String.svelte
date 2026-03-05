@@ -117,5 +117,6 @@
     font-size: calc(var(--ukulele-scale) * 0.3);
     font-weight: bold;
     color: var(--string-text);
+    z-index: 2;
   }
 </style>
